@@ -26,14 +26,14 @@ namespace FreqFind.Lib.ViewModels
             asioOut = new AsioOut("ASIO4ALL v2");
 
             //asioOut.InputChannelOffset = inputNumber;
-            asioOut.InitRecordAndPlayback(null, 2, sampleRate);
+            asioOut.InitRecordAndPlayback(null, 1, sampleRate);
             asioOut.AudioAvailable += OnAsioAudioAvailable;
         }
-
+        private float[] dataSample = new float[512];
         private void OnAsioAudioAvailable(object sender, AsioAudioAvailableEventArgs e)
         {
-            var samples = e.GetAsInterleavedSamples();
-            OnDataReceived(samples);
+            e.GetAsInterleavedSamples(dataSample);
+            OnDataReceived(dataSample);
         }
 
         public void Start()

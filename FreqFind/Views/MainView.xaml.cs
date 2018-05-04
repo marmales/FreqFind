@@ -55,7 +55,7 @@ namespace FreqFind.Views
                 this.Dispatcher.Invoke(() =>
                 {
                     //source.AssignFrequencyValues(vm.TransformedData.Take(vm.TransformedData.Length / 2).ToArray());
-                    source.AssignTempValues(vm.TransformedData);
+                    source.AssignFrequencyValues(vm.TransformedData);
                 });
 
             }

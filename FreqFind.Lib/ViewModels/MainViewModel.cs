@@ -17,15 +17,10 @@ namespace FreqFind.Lib.ViewModels
         private IAudioHelpers audioHelper;
         public MainViewModel()
         {
-            //var audioThread = new Thread(() =>
-            //{
-                StartAudio();
-            //});
-
-            //audioThread.Start();
+            StartAudio();
         }
 
-        public float[] TransformedData // hide if tone will be implemented
+        public double[] TransformedData // hide if tone will be implemented
         {
             get { return transformedData; }
             set
@@ -35,7 +30,7 @@ namespace FreqFind.Lib.ViewModels
                 OnPropertyChanged(nameof(TransformedData));
             }
         }
-        float[] transformedData = new float[1];
+        double[] transformedData = new double[1];
 
         private void StartAudio()
         {
@@ -43,15 +38,8 @@ namespace FreqFind.Lib.ViewModels
             processor.OnFFTCalculated += AssignCalculatedData;
 
             reader = new AsioReaderViewModel();
-            reader.Setup(new AudioSettings()
-            {
-                BufferSize = SoundCard.BufferSize,
-                Channels = SoundCard.Channels,
-                DeviceNumber = 0, //default
-                SampleRate = SoundCard.SampleRate
-            });
+            reader.Setup(null);
             reader.OnDataReceived = PrepareInputForFFT;
-            SetAudioHelper(SoundCard.Channels);
 
             reader.Start();
         }
@@ -59,16 +47,13 @@ namespace FreqFind.Lib.ViewModels
         private short[] receivedData = new short[1];
         private void PrepareInputForFFT(float[] data)
         {
-            TransformedData = data;
-            //audioHelper.ByteArrayTo16BITInputFormat(ref receivedData, data);
-
-            //FFTHelpers.SendSamples(processor.SampleAggregator, receivedData);
+            processor.Process(data);
         }
 
         public void AssignCalculatedData(object sender, FFTEventArgs e)
         {
-            //FFTHelpers.GetFrequencyValues(ref transformedData, e.Result);
-            //OnPropertyChanged(nameof(TransformedData));
+            FFTHelpers.GetFrequencyValues(ref transformedData, e.Result);
+            OnPropertyChanged(nameof(TransformedData));
         }
 
         private void SetAudioHelper(int channels)

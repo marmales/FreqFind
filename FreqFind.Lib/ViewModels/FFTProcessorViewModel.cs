@@ -15,10 +15,10 @@ namespace FreqFind.Lib.ViewModels
         public FFTProcessorViewModel(int sampleLength)
         {
             this.SampleAggregator = new SampleAggregator(sampleLength);
-            SampleAggregator.OnSamplesAccumulated = ProcessInput;
+            SampleAggregator.OnSamplesAccumulated = Process;
         }
 
-        private void ProcessInput(float[] input)
+        public void Process(float[] input)
         {
             var result = InternalFFT(input);
             OnFFTCalculated.Invoke(null, new FFTEventArgs(result));

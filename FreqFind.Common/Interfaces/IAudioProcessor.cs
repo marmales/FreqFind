@@ -10,7 +10,7 @@ namespace FreqFind.Common.Interfaces
     public interface IAudioProcessor
     {
         ISampleAggregator<float> SampleAggregator { get; set; }
-        //double[] Process(float[] rawData);
+        void Process(float[] rawData);
         event EventHandler<FFTEventArgs> OnFFTCalculated;
     }
 
