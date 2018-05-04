@@ -21,9 +21,31 @@ namespace FreqFind.Extensions
             for (int i = 0; i < newValues.Length; i++)
             {
                 var x = FrequencyHelpers.GetValue(newValues, i);
-                //if (x > 3)
-                    //break; // take only first 3khz
                 source.Collection.Add(new Point { X = x, Y = newValues[i] });
+            }
+            source.ResumeUpdate();
+        }
+        public static void AssignTempValues(this ObservableDataSource<Point> source, float[] rawdata)
+        {
+            if (rawdata == null) return;
+
+            source.SuspendUpdate();
+            source.Collection.Clear();
+            for (int i = 0; i < rawdata.Length; i += 10)
+            {
+                source.Collection.Add(new Point { X = i, Y = rawdata[i] * 10000 });
+            }
+            source.ResumeUpdate();
+        }
+        public static void AssignTempValues(this ObservableDataSource<Point> source, short[] rawdata)
+        {
+            if (rawdata == null) return;
+
+            source.SuspendUpdate();
+            source.Collection.Clear();
+            for (int i = 0; i < rawdata.Length; i+=10)
+            {
+                source.Collection.Add(new Point { X = i, Y = rawdata[i]});
             }
             source.ResumeUpdate();
         }

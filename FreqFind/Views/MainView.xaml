@@ -8,15 +8,15 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0"
+        <!--<TextBlock Grid.Row="0"
             Text="{Binding CurrentTone.HighestFrequency}"
                    FontSize="22"
                    Margin="10"
                    HorizontalAlignment="Center"
-                   Width="150"/>
+                   Width="150"/>-->
         <d3:ChartPlotter x:Name="fftChart"
                          Grid.Row="1"
-                         Visible="-0.1, -50, 44.1, 10050"
+                         Visible="-2, -1000, 26, 12000"
                          Background="Transparent"
                          LegendVisible="False"
                          FontSize="11"/>

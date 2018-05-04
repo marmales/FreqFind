@@ -54,19 +54,9 @@ namespace FreqFind.Views
             {
                 this.Dispatcher.Invoke(() =>
                 {
-                    source.AssignFrequencyValues(vm.TransformedData.Take(vm.TransformedData.Length / 2).ToArray());
+                    //source.AssignFrequencyValues(vm.TransformedData.Take(vm.TransformedData.Length / 2).ToArray());
+                    source.AssignTempValues(vm.TransformedData);
                 });
-                //try
-                //{
-                //    this.Dispatcher.Invoke(() =>
-                //    {
-                //        source.AssignFrequencyValues(vm.TransformedData.Take(vm.TransformedData.Length / 2).ToArray());
-                //    });
-                //}
-                //catch
-                //{
-                //    Debug.Print("Catched TaskedCancelException in MainView.xaml.cs");
-                //}
 
             }
         }

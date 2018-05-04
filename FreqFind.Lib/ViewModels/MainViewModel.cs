@@ -5,151 +5,85 @@ using System.Timers;
 using System;
 using FreqFind.Common.Extensions;
 using FreqFind.Common.Interfaces;
+using FreqFind.Lib.Models;
+using System.Threading;
 
 namespace FreqFind.Lib.ViewModels
 {
     public class MainViewModel : BaseDialogViewModel
     {
+        private IAudioReader<float> reader;
+        private IAudioProcessor processor;
+        private IAudioHelpers audioHelper;
         public MainViewModel()
         {
-            RecordingDevice = new WaveIn()
-            {
-                //WaveFormat = new WaveFormat(),
-                WaveFormat = new WaveFormat(SoundCard.SampleRate, 1),
-                DeviceNumber = 0
-            };
-            WaveProvider = WaveProvider.SetWaveFormat(RecordingDevice);
-            RecordingDevice.DataAvailable += RecordingDevice_DataAvailable;
-            RecordingDevice.StartRecording();
+            //var audioThread = new Thread(() =>
+            //{
+                StartAudio();
+            //});
 
-            Start(); //Start timer
-
+            //audioThread.Start();
         }
 
-        private void RecordingDevice_DataAvailable(object sender, WaveInEventArgs e)
+        public float[] TransformedData // hide if tone will be implemented
         {
-            WaveProvider.AddSamples(e.Buffer, 0, e.BytesRecorded);
-        }
-
-        public ISoundTone CurrentTone
-        {
-            get { return currentTone ?? (currentTone = new ToneViewModel()); }
-            set
-            {
-                if (currentTone == value) return;
-                currentTone = value;
-                OnPropertyChanged(nameof(CurrentTone));
-            }
-        }
-        ISoundTone currentTone;
-
-        public double[] TransformedData // hide if tone will be implemented
-        {
-            get
-            {
-                return transformedData ?? (transformedData = new double[0]);
-            }
+            get { return transformedData; }
             set
             {
                 if (transformedData == value) return;
                 transformedData = value;
-                CurrentTone.SetHighestFreq(transformedData);
                 OnPropertyChanged(nameof(TransformedData));
             }
         }
-        double[] transformedData;
+        float[] transformedData = new float[1];
 
-        public double[] RawData
+        private void StartAudio()
         {
-            get
-            {
-                return rawData ?? (rawData = new double[0]);
-            }
-            set
-            {
-                if (rawData == value) return;
-                rawData = value;
-                TransformedData = FFTHelpers.FFT(rawData);
-                OnPropertyChanged(nameof(RawData));
-            }
-        }
-        double[] rawData;
-        #region Timer
-        protected Timer timer { get; set; }
-        protected void Start(bool restart = false)
-        {
-            if (timer == null || restart)
-                CreateTimer();
+            processor = new FFTProcessorViewModel(SoundCard.BufferSize);
+            processor.OnFFTCalculated += AssignCalculatedData;
 
-            timer.Start();
+            reader = new AsioReaderViewModel();
+            reader.Setup(new AudioSettings()
+            {
+                BufferSize = SoundCard.BufferSize,
+                Channels = SoundCard.Channels,
+                DeviceNumber = 0, //default
+                SampleRate = SoundCard.SampleRate
+            });
+            reader.OnDataReceived = PrepareInputForFFT;
+            SetAudioHelper(SoundCard.Channels);
+
+            reader.Start();
         }
 
-        void CreateTimer()
+        private short[] receivedData = new short[1];
+        private void PrepareInputForFFT(float[] data)
         {
-            timer = new Timer()
-            {
-                Interval = 10, //defined in ms
-                Enabled = true,
-                AutoReset = true
-            };
+            TransformedData = data;
+            //audioHelper.ByteArrayTo16BITInputFormat(ref receivedData, data);
 
-            timer.Elapsed += OnTimeElapsed;
+            //FFTHelpers.SendSamples(processor.SampleAggregator, receivedData);
         }
 
-        //go with async
-        void OnTimeElapsed(object sender, ElapsedEventArgs e)
+        public void AssignCalculatedData(object sender, FFTEventArgs e)
         {
-            var frames = new byte[SoundCard.BufferSize];
-            WaveProvider.Read(frames, 0, frames.Length);
-            if (frames.Length < 0 || frames[frames.Length - 2] == 0) return;
-
-            timer.Enabled = false;
-
-            var sample_resolution = 16;
-            var bytes_per_point = sample_resolution / 8;
-            //var vals = new Int32[frames.Length / bytes_per_point];
-            var Ys = new double[frames.Length / bytes_per_point];
-            var Xs = new double[frames.Length / bytes_per_point];
-
-            //processed data xs2 is in khz 
-            //var Ys2 = new double[frames.Length / bytes_per_point];
-            //var Xs2 = new double[frames.Length / bytes_per_point];
-            for (int i = 0; i < Ys.Length; i++)
-            {
-                var hByte = frames[i * 2 + 1];
-                var lByte = frames[i * 2 + 0];
-                Ys[i] = (short)((hByte << 8) | lByte);
-                Xs[i] = i;
-                //Ys[i] = vals[i];
-                //Xs2[i] = (double)i / Ys.Length * RATE / 1000.0; //units in khz
-            }
-
-            RawData = Ys;
-
-            timer.Enabled = true;
+            //FFTHelpers.GetFrequencyValues(ref transformedData, e.Result);
+            //OnPropertyChanged(nameof(TransformedData));
         }
 
-        #endregion
-
-        #region Recording 
-
-        protected BufferedWaveProvider WaveProvider { get; set; }
-        public WaveIn RecordingDevice
+        private void SetAudioHelper(int channels)
         {
-            get { return recordingDevice; }
-            set
+            switch (channels)
             {
-                if (recordingDevice == value) return;
-                recordingDevice = value;
-
-                //if(RecordingDevice != null && RecordingDevice.WaveFormat != null)
-                //    WaveProvider.SetWaveFormat(recordingDevice);
-                OnPropertyChanged(nameof(RecordingDevice));
+                case 1:
+                    audioHelper = new AudioHelpers_16bitPCM_Mono();
+                    break;
+                case 2:
+                    audioHelper = new AudioHelpers_16bitPCM_Stereo();
+                    break;
+                default:
+                    throw new InvalidOperationException("Unsupported number of channels.\nOnly 1 or 2 are valid.");
             }
         }
-        WaveIn recordingDevice;
-
-        #endregion
-
     }
 }
