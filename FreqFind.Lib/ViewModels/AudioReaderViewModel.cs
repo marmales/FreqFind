@@ -1,27 +1,24 @@
-﻿using System;
+﻿using FreqFind.Common;
 using FreqFind.Common.Interfaces;
-using FreqFind.Common.Models;
 using NAudio.Wave;
-using System.Linq;
-using System.Collections;
-using System.Collections.Generic;
+using System;
 
 namespace FreqFind.Lib.ViewModels
 {
-    public class AudioReaderViewModel : IAudioReader<byte>
+    public class AudioReaderViewModel : BaseDialogViewModel, IAudioReader<byte>
     {
         private IWaveIn waveIn;
         private WaveFormat waveFormat;
-        private BufferedWaveProvider provider;
-        
+
         public AudioReaderViewModel()
         {
         }
-        public void Setup(IAudioSettings settings)
+        public void Setup(int sampleRate, int channels, int deviceNumber)
         {
-            waveFormat = new WaveFormat(settings.SampleRate, settings.Channels);
-            waveIn = new WaveInEvent()
+            waveFormat = new WaveFormat(sampleRate, channels);
+            waveIn = new WaveIn()
             {
+                DeviceNumber = deviceNumber,
                 WaveFormat = waveFormat
             };
             waveIn.DataAvailable += OnDataAvailable;
@@ -39,23 +36,37 @@ namespace FreqFind.Lib.ViewModels
             if (waveIn == null || waveFormat == null)
                 throw new NoSetupException();
 
-
+            State = RecordingState.Recording;
             waveIn.StartRecording();
         }
 
         public void Stop()
         {
+            State = RecordingState.Stoped;
+            waveIn.StopRecording();
         }
         public Action<byte[]> OnDataReceived { get; set; }
+
+        public RecordingState State
+        {
+            get { return state; }
+            set
+            {
+                if (state == value) return;
+                state = value;
+                OnPropertyChanged(nameof(State));
+            }
+        }
+        RecordingState state;
     }
 
 
 
     public class NoSetupException : Exception
     {
-        private static string setupMessage = 
-            $"Can't start recording without setting properties (call {nameof(IAudioReader<byte>.Setup)} method before {nameof(IAudioReader<byte>.Start)} method)";
-        public NoSetupException() : base (setupMessage)
+        private static string setupMessage =
+            $"Can't start recording without setting properties (call Setup method before {nameof(IAudioReader<byte>.Start)} method)";
+        public NoSetupException() : base(setupMessage)
         {
         }
     }

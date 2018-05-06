@@ -2,6 +2,20 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Resources/Icons.xaml"/>
+                <ResourceDictionary Source="/Resources/Styles.xaml"/>
+
+                <ResourceDictionary Source="/FreqFind;component/Resources/Themes/Dark.xaml"/>
+
+                <ResourceDictionary Source="/FreqFind;component/Resources/Themes/Components/Menu.xaml"/>
+                <ResourceDictionary Source="/FreqFind;component/Resources/Themes/Components/MenuItem.xaml"/>
+                <ResourceDictionary Source="/FreqFind;component/Resources/Themes/Components/Button.xaml"/>
+                <ResourceDictionary Source="/FreqFind;component/Resources/Themes/Components/TextBlock.xaml"/>
+                <ResourceDictionary Source="/FreqFind;component/Resources/Themes/Components/ComboBox.xaml"/>
+                <ResourceDictionary Source="/FreqFind;component/Resources/Themes/Components/TextBox.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

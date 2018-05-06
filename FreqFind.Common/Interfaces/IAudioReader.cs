@@ -1,17 +1,21 @@
-﻿using FreqFind.Common.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace FreqFind.Common.Interfaces
 {
     public interface IAudioReader<T>
     {
         Action<T[]> OnDataReceived { get; set; }
-        void Setup(IAudioSettings settings);
+        void Setup(int sampleRate, int channels, int deviceNumber);
         void Start();
         void Stop();
+
+        RecordingState State { get; set; }
+    }
+
+    public enum RecordingState
+    {
+        Stoped,
+        Recording,
+        Paused
     }
 }

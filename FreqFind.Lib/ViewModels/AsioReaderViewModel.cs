@@ -1,7 +1,6 @@
-﻿using System;
-using FreqFind.Common.Interfaces;
-using FreqFind.Common.Models;
+﻿using FreqFind.Common.Interfaces;
 using NAudio.Wave;
+using System;
 
 namespace FreqFind.Lib.ViewModels
 {
@@ -20,7 +19,7 @@ namespace FreqFind.Lib.ViewModels
             var drives = AsioOut.GetDriverNames();
         }
 
-        public void Setup(IAudioSettings settings)
+        public void Setup()
         {
             var drives = AsioOut.GetDriverNames();
             asioOut = new AsioOut("ASIO4ALL v2");
@@ -45,6 +44,13 @@ namespace FreqFind.Lib.ViewModels
         {
             throw new NotImplementedException();
         }
+
+        public void Setup(int sampleRate, int channels, int deviceNumber)
+        {
+            throw new NotImplementedException();
+        }
+
         public Action<float[]> OnDataReceived { get; set; }
+        public RecordingState State { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     }
 }

@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FreqFind.Common.Interfaces
 {
-    public interface IAudioProcessor
+    public interface IAudioProcessor : ICleanup
     {
         ISampleAggregator<float> SampleAggregator { get; set; }
         void Process(float[] rawData);
@@ -22,10 +17,10 @@ namespace FreqFind.Common.Interfaces
 
     public class FFTEventArgs : EventArgs
     {
-        public FFTEventArgs(Complex[] result)
+        public FFTEventArgs(double[] result)
         {
             Result = result;
         }
-        public Complex[] Result { get; set; }
+        public double[] Result { get; set; }
     }
 }

@@ -1,59 +1,130 @@
-﻿using FreqFind.Lib.Helpers;
-using FreqFind.Common;
-using NAudio.Wave;
-using System.Timers;
-using System;
+﻿using FreqFind.Common;
 using FreqFind.Common.Extensions;
 using FreqFind.Common.Interfaces;
+using FreqFind.Lib.Helpers;
 using FreqFind.Lib.Models;
-using System.Threading;
+using System;
+using System.Linq;
+using System.Windows.Input;
 
 namespace FreqFind.Lib.ViewModels
 {
     public class MainViewModel : BaseDialogViewModel
     {
-        private IAudioReader<float> reader;
+        private IAudioReader<byte> reader;
         private IAudioProcessor processor;
         private IAudioHelpers audioHelper;
+        private ISoundNote soundNote;
+        SettingsViewModel settingsViewModel;
         public MainViewModel()
         {
-            StartAudio();
+            soundNote = new ToneViewModel();
         }
 
-        public double[] TransformedData // hide if tone will be implemented
+        public IAudioProcessor FFTViewModel
         {
-            get { return transformedData; }
-            set
+            get { return processor; }
+        }
+        public ISoundNote NoteViewModel
+        {
+            get { return soundNote; }
+        }
+
+        public AudioSettings AudioOptions
+        {
+            get { return audioOptions ?? (audioOptions = DefaultSettings()); }
+            set { audioOptions = value; }
+        }
+
+        private AudioSettings DefaultSettings()
+        {
+            return new AudioSettings()
             {
-                if (transformedData == value) return;
-                transformedData = value;
-                OnPropertyChanged(nameof(TransformedData));
+                BufferSize = 8192,
+                LeftVolume = 0.5f,
+                SampleRate = 44100,
+                SelectedDevice = SettingsViewModel.GetDevices().FirstOrDefault()
+            };
+        }
+
+        private AudioSettings audioOptions;
+
+
+        public ICommand OpenAudioSettingsCommand
+        {
+            get
+            {
+                return openAudioSettingsCommand ?? (openAudioSettingsCommand = new RelayCommand(
+                      p => true,
+                      p => DisplaySettingsWindow()));
             }
         }
-        double[] transformedData = new double[1];
+        ICommand openAudioSettingsCommand;
+        void DisplaySettingsWindow()
+        {
+            if (settingsViewModel == null)
+                settingsViewModel = new SettingsViewModel(AudioOptions);
+
+            if (reader != null)
+                reader.Stop();
+            settingsViewModel.ResolveDialog();
+        }
+
+        public ICommand StartCommand
+        {
+            get
+            {
+                return startCommand ?? (startCommand = new RelayCommand(
+                    p => reader == null || reader.State == RecordingState.Stoped || reader.State == RecordingState.Paused,
+                    p => StartAudio()));
+            }
+        }
+        ICommand startCommand;
+
+        public ICommand StopCommand
+        {
+            get
+            {
+                return stopCommand ?? (stopCommand = new RelayCommand(
+                    p => reader != null && reader.State == RecordingState.Recording,
+                    p => reader.Stop()));
+            }
+        }
+        ICommand stopCommand;
+
 
         private void StartAudio()
         {
-            processor = new FFTProcessorViewModel(SoundCard.BufferSize);
+            if (processor != null)
+            {
+                processor.Cleanup();
+                processor.OnFFTCalculated -= AssignCalculatedData;
+            }
+            processor = new FFTProcessorViewModel(AudioOptions.BufferSize);
             processor.OnFFTCalculated += AssignCalculatedData;
+            OnPropertyChanged(nameof(FFTViewModel));
 
-            reader = new AsioReaderViewModel();
-            reader.Setup(null);
-            reader.OnDataReceived = PrepareInputForFFT;
+            if (reader == null)
+            {
+                reader = new AudioReaderViewModel();
+                reader.OnDataReceived = PrepareInputForFFT;
+            }
+            SetAudioHelper(audioOptions.SelectedDevice.Channels);
 
+            reader.Setup(AudioOptions.SampleRate, AudioOptions.SelectedDevice.Channels, AudioOptions.SelectedDevice.Id);
             reader.Start();
         }
 
         private short[] receivedData = new short[1];
-        private void PrepareInputForFFT(float[] data)
+        private void PrepareInputForFFT(byte[] data)
         {
-            processor.Process(data);
+            audioHelper.ByteArrayTo16BITInputFormat(ref receivedData, data); //From byte[] To 16bit format
+            FFTHelpers.SendStereoSamples(processor.SampleAggregator, receivedData, AudioOptions.LeftVolume); //Process with FFT when buffer will be filled - SoundCard.BufferSize
         }
 
         public void AssignCalculatedData(object sender, FFTEventArgs e)
         {
-            FFTHelpers.GetFrequencyValues(ref transformedData, e.Result);
-            OnPropertyChanged(nameof(TransformedData));
+            soundNote.GetNote(e.Result, AudioOptions.SampleRate);
         }
 
         private void SetAudioHelper(int channels)

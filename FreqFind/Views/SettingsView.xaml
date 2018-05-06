@@ -1,0 +1,100 @@
+﻿<local:FreqBaseWindow x:Class="FreqFind.Views.SettingsView"
+                      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      
+                      xmlns:local="clr-namespace:FreqFind.Views"
+                      xmlns:conv="clr-namespace:FreqFind.Converters"
+                      SnapsToDevicePixels="True"
+                      
+                      Foreground="{DynamicResource WindowText}"
+                      Background="{DynamicResource WindowBackground}"    
+        
+                      MaxWidth="450"
+                      MaxHeight="600"
+                      Title="Audio Settings">
+    <local:FreqBaseWindow.Resources>
+        <ResourceDictionary>
+            <conv:ToFloatSliderConvert x:Key="SliderConv"/>
+        </ResourceDictionary>
+    </local:FreqBaseWindow.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Text="SELECT DEVICE"
+                   Margin="5,20" Grid.Row="0" Grid.Column="0"
+                   VerticalAlignment="Center" HorizontalAlignment="Center"/>
+        <ComboBox ItemsSource="{Binding Devices}"
+                  SelectedItem="{Binding Settings.SelectedDevice}"
+                  DisplayMemberPath="Name" 
+                  Margin="20" Grid.Row="0" Grid.Column="1"
+                  VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+
+        <Border Background="{StaticResource RowSeparatorBrush}"
+                Grid.Row="1" Grid.ColumnSpan="2" Height="1" Margin="0,5,0,20"
+                VerticalAlignment="Top"/>
+
+
+        <TextBlock Text="Sample rate"
+                   Margin="10" Grid.Row="2" Grid.Column="0"
+                   VerticalAlignment="Center" HorizontalAlignment="Left"/>
+        <ComboBox  SelectedItem="{Binding Settings.SampleRate}"
+                   ItemsSource="{Binding SampleRateList}"
+                   Margin="10" Grid.Row="2" Grid.Column="1"
+                   VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+
+        <!--Channels volume-->
+        <Grid Grid.Row="3" Grid.ColumnSpan="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Vertical" Grid.Column="0" Margin="10">
+                <TextBlock Text="Left channel"
+                           VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                <Slider Minimum="0" Maximum="100" 
+                        Value="{Binding Settings.LeftVolume, Converter={StaticResource SliderConv}}"
+                        VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+            </StackPanel>
+
+            <!--ADD CONVERTER THAT WILL DIVIDE BY 100 AND VISIBILITY-->
+            <StackPanel Orientation="Vertical" Grid.Column="1" Margin="10">
+                <TextBlock Text="Right channel"
+                           VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                <Slider Minimum="0" Maximum="100" 
+                        Value="{Binding Settings.RightVolume, Converter={StaticResource SliderConv}}"
+                        VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+            </StackPanel>
+        </Grid>
+
+        
+
+        <Border Background="{StaticResource RowSeparatorBrush}"
+                Grid.Row="4" Grid.ColumnSpan="2" Height="1" Margin="0,5,0,20"
+                VerticalAlignment="Top"/>
+
+
+        <TextBlock Text="Target buffer size"
+                   Margin="10" Grid.Row="5" Grid.Column="0"
+                   VerticalAlignment="Center" HorizontalAlignment="Left"/>
+        <ComboBox   SelectedItem="{Binding Settings.BufferSize}"
+                    ItemsSource="{Binding BufferSizeList}"
+                    Margin="10" Grid.Row="5" Grid.Column="1"
+                    VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+
+        <Button Content="Close" IsCancel="True"
+                Margin="10" Padding="15,5" Grid.Row="6" Grid.Column="1" 
+                HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+    </Grid>
+</local:FreqBaseWindow>

@@ -1,24 +1,22 @@
-﻿using FreqFind.Lib.ViewModels;
-using FreqFind.Extensions;
+﻿using FreqFind.Extensions;
+using FreqFind.Lib.ViewModels;
 using Microsoft.Research.DynamicDataDisplay;
-using Microsoft.Research.DynamicDataDisplay.DataSources;
+using Microsoft.Research.DynamicDataDisplay.Charts;
 using Microsoft.Research.DynamicDataDisplay.Charts.Axes;
+using Microsoft.Research.DynamicDataDisplay.DataSources;
 using System;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
-using System.Linq;
-using Microsoft.Research.DynamicDataDisplay.Charts;
-using FreqFind.Common.Extensions;
-using System.Diagnostics;
 
 namespace FreqFind.Views
 {
     /// <summary>
     /// Interaction logic for MainView.xaml
     /// </summary>
-    public partial class MainView : Window
+    public partial class FrequencyView : UserControl
     {
-        public MainView()
+        public FrequencyView()
         {
             InitializeComponent();
             DataContextChanged += OnDataContextChanged;
@@ -26,8 +24,8 @@ namespace FreqFind.Views
 
         private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            var newViewModel = e.NewValue as MainViewModel;
-            var oldViewModel = e.OldValue as MainViewModel;
+            var newViewModel = e.NewValue as FFTProcessorViewModel;
+            var oldViewModel = e.OldValue as FFTProcessorViewModel;
 
             if (oldViewModel != null)
             {
@@ -41,16 +39,16 @@ namespace FreqFind.Views
                 source = new ObservableDataSource<Point>();
                 source.SetXYMapping(x => x);
 
-                var lineGraph = fftChart.AddLineGraph(source, Color.FromRgb(0,0,0), 1, "Widmo");
+                var lineGraph = fftChart.AddLineGraph(source, Color.FromRgb(196, 196, 196), 1, "Widmo");
             }
         }
         ObservableDataSource<Point> source;
         void OnViewModelPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            var vm = sender as MainViewModel;
+            var vm = sender as FFTProcessorViewModel;
             if (vm == null) return;
 
-            if (string.Equals(e.PropertyName, nameof(MainViewModel.TransformedData)))
+            if (string.Equals(e.PropertyName, nameof(FFTProcessorViewModel.TransformedData)))
             {
                 this.Dispatcher.Invoke(() =>
                 {

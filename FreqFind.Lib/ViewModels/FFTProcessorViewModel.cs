@@ -1,17 +1,27 @@
 ﻿using Accord.Math;
+using FreqFind.Common;
 using FreqFind.Common.Interfaces;
+using FreqFind.Lib.Helpers;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FreqFind.Lib.ViewModels
 {
-    public class FFTProcessorViewModel : IAudioProcessor
+    public class FFTProcessorViewModel : BaseDialogViewModel, IAudioProcessor
     {
         public ISampleAggregator<float> SampleAggregator { get; set; }
+        public double[] TransformedData // hide if tone will be implemented
+        {
+            get { return transformedData; }
+            set
+            {
+                if (transformedData == value) return;
+                transformedData = value;
+                OnPropertyChanged(nameof(TransformedData));
+            }
+        }
+        double[] transformedData = new double[1];
+
         public FFTProcessorViewModel(int sampleLength)
         {
             this.SampleAggregator = new SampleAggregator(sampleLength);
@@ -21,7 +31,11 @@ namespace FreqFind.Lib.ViewModels
         public void Process(float[] input)
         {
             var result = InternalFFT(input);
-            OnFFTCalculated.Invoke(null, new FFTEventArgs(result));
+
+            FFTHelpers.GetFrequencyValues(ref transformedData, result);
+            OnPropertyChanged(nameof(TransformedData));
+
+            OnFFTCalculated.Invoke(null, new FFTEventArgs(transformedData));
         }
 
         private static Complex[] InternalFFT(float[] data)
@@ -32,14 +46,14 @@ namespace FreqFind.Lib.ViewModels
                 fftComplex[i] = new Complex(data[i], 0.0);// make it complex format (imaginary = 0)
             }
             FourierTransform.FFT(fftComplex, FourierTransform.Direction.Forward);
-            //for (int i = 0; i < data.Length / 2; i++)
-            //{
-
-            //    var im2 = Math.Pow(fftComplex[i].Imaginary, 2);
-            //    var re2 = Math.Pow(fftComplex[i].Real, 2);
-            //    fftResult[i] = 20 * Math.Log10(System.Math.Sqrt(im2 + re2));
-            //}
+            //FFTHelpers.FFT(fftComplex);
             return fftComplex;
+        }
+
+        public void Cleanup()
+        {
+            SampleAggregator.OnSamplesAccumulated = null;
+            TransformedData = new double[1];
         }
 
         public event EventHandler<FFTEventArgs> OnFFTCalculated;

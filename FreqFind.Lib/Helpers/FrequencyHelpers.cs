@@ -1,17 +1,12 @@
-﻿using FreqFind.Common.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace FreqFind.Lib.Helpers
 {
     public static class FrequencyHelpers
     {
-        public static double GetValue<T>(IList<T> frequencies, int index) 
+        public static double GetValue<T>(IList<T> frequencies, int index, int sampleRate = 48000)
         {
-            return (double)index / frequencies.Count * SoundCard.SampleRate / 2000.0; // in KHz
+            return (double)index / frequencies.Count * sampleRate / 2000.0; // in KHz
         }
         public static int GetIndex<T>(IList<T> frequencies, T value)
         {

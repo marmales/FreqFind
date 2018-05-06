@@ -1,11 +1,5 @@
 ﻿using FreqFind.Lib.ViewModels;
 using FreqFind.Views;
-using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace FreqFind
@@ -22,7 +16,7 @@ namespace FreqFind
 
         private void App_Startup(object sender, StartupEventArgs e)
         {
-            var mainWindow = new MainView();
+            var mainWindow = new WizardView();
             mainWindow.DataContext = new MainViewModel();
             mainWindow.Show();
         }
