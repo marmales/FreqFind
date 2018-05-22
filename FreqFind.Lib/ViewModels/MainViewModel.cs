@@ -41,7 +41,6 @@ namespace FreqFind.Lib.ViewModels
             return new AudioSettings()
             {
                 BufferSize = 8192,
-                LeftVolume = 0.5f,
                 SampleRate = 44100,
                 SelectedDevice = SettingsViewModel.GetDevices().FirstOrDefault()
             };
@@ -109,9 +108,9 @@ namespace FreqFind.Lib.ViewModels
                 reader = new AudioReaderViewModel();
                 reader.OnDataReceived = PrepareInputForFFT;
             }
-            SetAudioHelper(audioOptions.SelectedDevice.Channels);
+            audioHelper = new AudioHelpers_16bitPCM();
 
-            reader.Setup(AudioOptions.SampleRate, AudioOptions.SelectedDevice.Channels, AudioOptions.SelectedDevice.Id);
+            reader.Setup(AudioOptions.SampleRate, AudioOptions.SelectedDevice.ChannelsCount, AudioOptions.SelectedDevice.Id);
             reader.Start();
         }
 
@@ -119,27 +118,15 @@ namespace FreqFind.Lib.ViewModels
         private void PrepareInputForFFT(byte[] data)
         {
             audioHelper.ByteArrayTo16BITInputFormat(ref receivedData, data); //From byte[] To 16bit format
-            FFTHelpers.SendStereoSamples(processor.SampleAggregator, receivedData, AudioOptions.LeftVolume); //Process with FFT when buffer will be filled - SoundCard.BufferSize
+            FFTHelpers.SendSamples(
+                processor.SampleAggregator,
+                receivedData,
+                AudioOptions.SelectedDevice.Channels.Select(x => x.Volume)); //Process with FFT when buffer will be filled - SoundCard.BufferSize
         }
 
         public void AssignCalculatedData(object sender, FFTEventArgs e)
         {
             soundNote.GetNote(e.Result, AudioOptions.SampleRate);
-        }
-
-        private void SetAudioHelper(int channels)
-        {
-            switch (channels)
-            {
-                case 1:
-                    audioHelper = new AudioHelpers_16bitPCM_Mono();
-                    break;
-                case 2:
-                    audioHelper = new AudioHelpers_16bitPCM_Stereo();
-                    break;
-                default:
-                    throw new InvalidOperationException("Unsupported number of channels.\nOnly 1 or 2 are valid.");
-            }
         }
     }
 }

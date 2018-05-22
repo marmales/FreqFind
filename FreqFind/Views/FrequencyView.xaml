@@ -18,7 +18,7 @@
                    Width="150"/>-->
         <d3:ChartPlotter x:Name="fftChart"
                          Grid.Row="1"
-                         Visible="-2, -100, 26, 400"
+                         Visible="-2, -150, 26, 400"
                          Background="Transparent"
                          LegendVisible="False"
                          FontSize="11"/>

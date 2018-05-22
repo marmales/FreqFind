@@ -1,10 +1,7 @@
 ﻿using FreqFind.Extensions;
 using FreqFind.Lib.ViewModels;
 using Microsoft.Research.DynamicDataDisplay;
-using Microsoft.Research.DynamicDataDisplay.Charts;
-using Microsoft.Research.DynamicDataDisplay.Charts.Axes;
 using Microsoft.Research.DynamicDataDisplay.DataSources;
-using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -39,7 +36,8 @@ namespace FreqFind.Views
                 source = new ObservableDataSource<Point>();
                 source.SetXYMapping(x => x);
 
-                var lineGraph = fftChart.AddLineGraph(source, Color.FromRgb(196, 196, 196), 1, "Widmo");
+                var lineGraph = fftChart.AddLineGraph(source, Color.FromRgb(0, 128, 255), 1, "Widmo");
+                
             }
         }
         ObservableDataSource<Point> source;
@@ -52,46 +50,10 @@ namespace FreqFind.Views
             {
                 this.Dispatcher.Invoke(() =>
                 {
-                    //source.AssignFrequencyValues(vm.TransformedData.Take(vm.TransformedData.Length / 2).ToArray());
                     source.AssignFrequencyValues(vm.TransformedData);
                 });
 
             }
-        }
-
-        void SetAxisFormats(bool register)
-        {
-            if (register)
-            {
-                //var verticalAxis = fftChart.VerticalAxis as VerticalAxis;
-                //if (verticalAxis != null)
-                //    verticalAxis.AxisControl.LabelProvider.CustomFormatter = YAxisFormatter;
-                var horizontalAxis = fftChart.HorizontalAxis as HorizontalAxis;
-                if (horizontalAxis != null)
-                    horizontalAxis.AxisControl.LabelProvider.CustomFormatter = XAxisFormatter;
-
-            }
-            else
-            {
-                //var verticalAxis = fftChart.VerticalAxis as VerticalAxis;
-                //if (verticalAxis != null)
-                //    verticalAxis.AxisControl.LabelProvider.CustomFormatter = null;
-                var horizontalAxis = fftChart.HorizontalAxis as HorizontalAxis;
-                if (horizontalAxis != null)
-                    horizontalAxis.AxisControl.LabelProvider.CustomFormatter = null;
-
-            }
-
-        }
-
-        private string XAxisFormatter(LabelTickInfo<double> arg)
-        {
-            throw new NotImplementedException();
-        }
-
-        private string YAxisFormatter(LabelTickInfo<double> arg)
-        {
-            throw new NotImplementedException();
         }
     }
 }

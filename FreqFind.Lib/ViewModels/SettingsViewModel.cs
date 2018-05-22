@@ -57,7 +57,7 @@ namespace FreqFind.Lib.ViewModels
 
         private static int[] GetBufferSizeCollection()
         {
-            var fftLimit = 14;
+            var fftLimit = 16;
             var bufferList = new List<int>();
             for (int i = 10; i < fftLimit; i++)
             {

@@ -15,6 +15,7 @@ namespace FreqFind.Lib.Models
 
             }
         }
+
         Device selectedDevice;
 
         public int SampleRate
@@ -40,34 +41,5 @@ namespace FreqFind.Lib.Models
             }
         }
         int bufferSize;
-
-
-        public float LeftVolume
-        {
-            get { return leftVolume; }
-            set
-            {
-                if (value < 0 || value > 1) return;
-                leftVolume = value;
-                rightVolume = 1 - leftVolume;
-                OnPropertyChanged(nameof(LeftVolume));
-                OnPropertyChanged(nameof(RightVolume));
-            }
-        }
-        float leftVolume = 0.5f;
-
-        public float RightVolume
-        {
-            get { return rightVolume; }
-            set
-            {
-                if (value < 0 || value > 1) return;
-                rightVolume = value;
-                leftVolume = 1 - rightVolume;
-                OnPropertyChanged(nameof(LeftVolume));
-                OnPropertyChanged(nameof(RightVolume));
-            }
-        }
-        float rightVolume = 0.5f;
     }
 }

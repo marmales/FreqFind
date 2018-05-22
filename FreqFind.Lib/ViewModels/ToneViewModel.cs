@@ -42,8 +42,8 @@ namespace FreqFind.Lib.ViewModels
         INote currentNote;
 
         public INote GetNote(double[] frequencies, int sampleRate)
-         {
-            var freqValue = FrequencyHelpers.GetValue(frequencies, frequencies.ToList().IndexOf(frequencies.Max())) * 1000;
+        {
+            var freqValue = FrequencyHelpers.GetValue(frequencies, frequencies.ToList().IndexOf(frequencies.Max()), sampleRate) * 1000;
             for (int i = 0; i < notes.Count; i++)
             {
                 if (notes[i].Last().Key > freqValue)

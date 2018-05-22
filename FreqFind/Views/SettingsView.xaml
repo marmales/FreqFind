@@ -55,31 +55,22 @@
                    VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
 
         <!--Channels volume-->
-        <Grid Grid.Row="3" Grid.ColumnSpan="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <StackPanel Orientation="Vertical" Grid.Column="0" Margin="10">
-                <TextBlock Text="Left channel"
-                           VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                <Slider Minimum="0" Maximum="100" 
-                        Value="{Binding Settings.LeftVolume, Converter={StaticResource SliderConv}}"
-                        VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
-            </StackPanel>
-
-            <!--ADD CONVERTER THAT WILL DIVIDE BY 100 AND VISIBILITY-->
-            <StackPanel Orientation="Vertical" Grid.Column="1" Margin="10">
-                <TextBlock Text="Right channel"
-                           VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                <Slider Minimum="0" Maximum="100" 
-                        Value="{Binding Settings.RightVolume, Converter={StaticResource SliderConv}}"
-                        VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
-            </StackPanel>
-        </Grid>
-
-        
-
+        <ItemsControl ItemsSource="{Binding Settings.SelectedDevice.Channels}"
+                      Grid.Row="3" Grid.ColumnSpan="2">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Grid Margin="10">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Path=Id, 
+                                       StringFormat={}Channel {0}: }"/>
+                            <Slider Minimum="0" Maximum="100" Width="200" Margin="10,0"
+                                    Value="{Binding Path=Volume, Mode=TwoWay}"
+                                    VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
         <Border Background="{StaticResource RowSeparatorBrush}"
                 Grid.Row="4" Grid.ColumnSpan="2" Height="1" Margin="0,5,0,20"
                 VerticalAlignment="Top"/>

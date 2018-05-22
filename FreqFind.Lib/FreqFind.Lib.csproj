@@ -67,6 +67,7 @@
     <Compile Include="Helpers\FFTHelpers.cs" />
     <Compile Include="Helpers\FrequencyHelpers.cs" />
     <Compile Include="Models\AudioSettings.cs" />
+    <Compile Include="Models\Channel.cs" />
     <Compile Include="Models\Device.cs" />
     <Compile Include="Models\Note.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

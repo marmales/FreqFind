@@ -1,70 +1,116 @@
 ﻿using FreqFind.Common.Interfaces;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 
 namespace FreqFind.Lib.Helpers
 {
-    public static class FFTHelpers
+    public static class FFTProcessor
     {
-
-        /* Performs a Bit Reversal Algorithm on a postive integer 
-         * for given number of bits
-         * e.g. 011 with 3 bits is reversed to 110 */
-        public static int BitReverse(int n, int bits)
+        public static void ChirpTransform(Complex[] input, int startFrequency, int endFrequency, int prazkiCount, int sampleRate)
         {
-            int reversedN = n;
-            int count = bits - 1;
+            var samplesLength = input.Length;
+            var NM1 = samplesLength + prazkiCount - 1;
+            var A = Complex.Exp(new Complex(0, -2 * Math.PI * startFrequency / sampleRate));
+            var W = Complex.Exp(new Complex(0, -2 * Math.PI * ((endFrequency - startFrequency) / (2 * (prazkiCount - 1)) / sampleRate)));
 
-            n >>= 1;
-            while (n > 0)
+            var y1 = new Complex[samplesLength];
+            var y2 = new Complex[samplesLength];
+
+
+            for (int k = 0; k < NM1 - 1; k++)
             {
-                reversedN = (reversedN << 1) | (n & 1);
-                count--;
-                n >>= 1;
-            }
+                if (k < samplesLength)
+                    y1[k] = Complex.Pow(A * Complex.Pow(W, k), k) * input[k];
+                else
+                    y1[k] = 0;
 
-            return ((reversedN << count) & ((1 << bits) - 1));
+                if (k < prazkiCount)
+                    y2[k] = Complex.Pow(W, -k / 2);
+                else
+                    y2[k] = Complex.Pow(W, (-Math.Pow((NM1 - k), 2)));
+
+            }
         }
-
-        /* Uses Cooley-Tukey iterative in-place algorithm with radix-2 DIT case
-         * assumes no of points provided are a power of 2 */
-        public static void FFT(Complex[] buffer)
+        public static void TransformRadix2(Complex[] vector, bool inverse)
         {
+            // Length variables
+            int n = vector.Length;
+            int levels = 0;  // compute levels = floor(log2(n))
+            for (int temp = n; temp > 1; temp >>= 1)
+                levels++;
+            if (1 << levels != n)
+                throw new ArgumentException("Length is not a power of 2");
 
-            int bits = (int)Math.Log(buffer.Length, 2);
-            for (int j = 1; j < buffer.Length / 2; j++)
+            // Trigonometric table
+            Complex[] expTable = new Complex[n / 2];
+            double coef = 2 * Math.PI / n * (inverse ? 1 : -1);
+            for (int i = 0; i < n / 2; i++)
+                expTable[i] = Complex.Exp(new Complex(0, i * coef));
+
+            // Bit-reversed addressing permutation
+            for (int i = 0; i < n; i++)
             {
-
-                int swapPos = BitReverse(j, bits);
-                var temp = buffer[j];
-                buffer[j] = buffer[swapPos];
-                buffer[swapPos] = temp;
-            }
-
-            for (int N = 2; N <= buffer.Length; N <<= 1)
-            {
-                for (int i = 0; i < buffer.Length; i += N)
+                //Debug.Write(string.Format($"Before: {i}"));
+                int j = (int)((uint)ReverseBits(i) >> (32 - levels));
+                if (j > i)
                 {
-                    for (int k = 0; k < N / 2; k++)
+                    Complex temp = vector[i];
+                    vector[i] = vector[j];
+                    vector[j] = temp;
+                }
+                //Debug.WriteLine($"\tAfter: {j}");
+
+            }
+            //IMPLEMENTED PSEUDOCODE FROM https://en.wikipedia.org/wiki/Cooley–Tukey_FFT_algorithm
+            //for (int s = 1; s < Math.Log(n, 2); s++)
+            //{
+            //    var m = (int)Math.Pow(2, s);
+            //    var Wm = Complex.Exp(new Complex(0, (-2 * Math.PI) / m));
+
+            //    for (int k = 0; k < n - 1; k += m)
+            //    {
+            //        var W = new Complex(1, 0);
+            //        for (int j = 0; j < m / 2 - 1; j++)
+            //        {
+            //            var t = W * vector[k + j + m / 2];
+            //            var u = vector[k + j];
+            //            vector[k + j] = u + t;
+            //            vector[k + j + m / 2] = u - t;
+            //            W = W * Wm;
+            //        }
+            //    }
+            //}
+
+            //Cooley - Tukey decimation -in-time radix - 2 FFT
+            for (int size = 2; size <= n; size *= 2)
+            {
+                int halfsize = size / 2;
+                int tablestep = n / size;
+                for (int i = 0; i < n; i += size)
+                {
+                    for (int j = i, k = 0; j < i + halfsize; j++, k += tablestep)
                     {
-
-                        int evenIndex = i + k;
-                        int oddIndex = i + k + (N / 2);
-                        var even = buffer[evenIndex];
-                        var odd = buffer[oddIndex];
-
-                        double term = -2 * Math.PI * k / (double)N;
-                        Complex exp = new Complex(Math.Cos(term), Math.Sin(term)) * odd;
-
-                        buffer[evenIndex] = even + exp;
-                        buffer[oddIndex] = even - exp;
-
+                        Complex temp = vector[j + halfsize] * expTable[k];
+                        vector[j + halfsize] = vector[j] - temp;
+                        vector[j] += temp;
                     }
                 }
+                if (size == n)  // Prevent overflow in 'size *= 2'
+                    break;
             }
         }
-
-
+        private static int ReverseBits(int val)
+        {
+            int result = 0;
+            for (int i = 0; i < 32; i++, val >>= 1)
+                result = (result << 1) | (val & 1);
+            return result;
+        }
+    }
+    public static class FFTHelpers
+    {
         public static void GetFrequencyValues(ref double[] result, Complex[] fftData)
         {
             var targetArrayLength = fftData.Length / 2;
@@ -72,42 +118,23 @@ namespace FreqFind.Lib.Helpers
                 result = new double[targetArrayLength];
             for (int i = 0; i < targetArrayLength; i++)
             {
-                //var im2 = Math.Pow(fftData[i].Imaginary, 2);
-                //var re2 = Math.Pow(fftData[i].Real, 2);
                 result[i] = 20 * Math.Log10(fftData[i].Magnitude);//System.Math.Sqrt(im2 + re2)
             }
         }
 
-        public static void SendStereoSamples(ISampleAggregator<float> aggregator, short[] data, float leftVolume = 0.5f)
+        public static void SendSamples(ISampleAggregator<float> aggregator, short[] data, IEnumerable<int> channelsVolume)
         {
-            if (leftVolume < 0 || leftVolume > 1)
-                throw new InvalidOperationException("Volume value bust be between 0 and 1");
+            var volumeList = channelsVolume.ToList();
+            if (volumeList.Count == 0)
+                throw new ArgumentException("Channels not found!");
 
-            var rigthVolume = 1 - leftVolume;
-
-            float tmpValue;
+            float tmpValue = 0;
             var maxIntValue = 32767; var minIntValue = -32768; var divisior = 32768f;
             var maxFloatValue = maxIntValue / divisior; var minFloatValue = minIntValue / divisior;
-            for (int i = 0; i < data.Length; i += 2) //2 channels
+            for (int i = 0; i < data.Length; i += volumeList.Count)
             {
-                tmpValue = leftVolume * data[i] + rigthVolume * data[i + 1];
-                if (tmpValue > maxIntValue)
-                    aggregator.AddSample(maxFloatValue);
-                else if (tmpValue < minIntValue)
-                    aggregator.AddSample(minFloatValue);
-                else
-                    aggregator.AddSample(tmpValue / divisior); //[-1;1]
-
-            }
-        }
-        public static void SendMonoSamples(ISampleAggregator<float> aggregator, short[] data)
-        {
-            float tmpValue;
-            var maxIntValue = 32767; var minIntValue = -32768; var divisior = 32768f;
-            var maxFloatValue = maxIntValue / divisior; var minFloatValue = minIntValue / divisior;
-            for (int i = 0; i < data.Length; i++)
-            {
-                tmpValue = data[i];
+                int channelsIndex = 0;
+                tmpValue = data.Skip(i).Take(volumeList.Count).Sum(x => (volumeList[channelsIndex++] / 100f) * x);
                 if (tmpValue > maxIntValue)
                     aggregator.AddSample(maxFloatValue);
                 else if (tmpValue < minIntValue)

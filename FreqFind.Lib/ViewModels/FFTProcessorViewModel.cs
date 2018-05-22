@@ -45,8 +45,8 @@ namespace FreqFind.Lib.ViewModels
             {
                 fftComplex[i] = new Complex(data[i], 0.0);// make it complex format (imaginary = 0)
             }
-            FourierTransform.FFT(fftComplex, FourierTransform.Direction.Forward);
-            //FFTHelpers.FFT(fftComplex);
+            //FourierTransform.FFT(fftComplex, FourierTransform.Direction.Backward);
+            FFTProcessor.TransformRadix2(fftComplex, false);
             return fftComplex;
         }
 
@@ -65,6 +65,8 @@ namespace FreqFind.Lib.ViewModels
         private int targetLength;
         private int index;
         private float[] aggregatedData;
+
+        private static object locker = new object();
         public SampleAggregator(int length)
         {
             targetLength = length;
@@ -79,7 +81,7 @@ namespace FreqFind.Lib.ViewModels
             if (index >= targetLength)
             {
                 index = 0;
-                OnSamplesAccumulated.Invoke(aggregatedData);
+                var result = OnSamplesAccumulated.BeginInvoke(aggregatedData, null, locker);
             }
         }
     }
