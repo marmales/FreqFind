@@ -46,7 +46,7 @@ namespace FreqFind.Lib.ViewModels
                 fftComplex[i] = new Complex(data[i], 0.0);// make it complex format (imaginary = 0)
             }
             //FourierTransform.FFT(fftComplex, FourierTransform.Direction.Backward);
-            FFTProcessor.TransformRadix2(fftComplex, false);
+            FFTProcessor.ChirpTransform(fftComplex, TempGlobalSettings.LeftFreq, TempGlobalSettings.RightFreq, TempGlobalSettings.FreqSamplesCount, 44100);
             return fftComplex;
         }
 

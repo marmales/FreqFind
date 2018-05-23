@@ -51,6 +51,18 @@ namespace FreqFind.Lib.ViewModels
         }
 
         public Action<float[]> OnDataReceived { get; set; }
-        public RecordingState State { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public RecordingState State
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
     }
 }

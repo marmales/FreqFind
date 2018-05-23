@@ -9,6 +9,12 @@ using System.Windows.Input;
 
 namespace FreqFind.Lib.ViewModels
 {
+    public static class TempGlobalSettings
+    {
+        public static int LeftFreq { get; set; } = 50;
+        public static int RightFreq { get; set; } = 3000;
+        public static int FreqSamplesCount { get; set; } = 2950;
+    }
     public class MainViewModel : BaseDialogViewModel
     {
         private IAudioReader<byte> reader;
@@ -35,61 +41,8 @@ namespace FreqFind.Lib.ViewModels
             get { return audioOptions ?? (audioOptions = DefaultSettings()); }
             set { audioOptions = value; }
         }
-
-        private AudioSettings DefaultSettings()
-        {
-            return new AudioSettings()
-            {
-                BufferSize = 8192,
-                SampleRate = 44100,
-                SelectedDevice = SettingsViewModel.GetDevices().FirstOrDefault()
-            };
-        }
-
         private AudioSettings audioOptions;
 
-
-        public ICommand OpenAudioSettingsCommand
-        {
-            get
-            {
-                return openAudioSettingsCommand ?? (openAudioSettingsCommand = new RelayCommand(
-                      p => true,
-                      p => DisplaySettingsWindow()));
-            }
-        }
-        ICommand openAudioSettingsCommand;
-        void DisplaySettingsWindow()
-        {
-            if (settingsViewModel == null)
-                settingsViewModel = new SettingsViewModel(AudioOptions);
-
-            if (reader != null)
-                reader.Stop();
-            settingsViewModel.ResolveDialog();
-        }
-
-        public ICommand StartCommand
-        {
-            get
-            {
-                return startCommand ?? (startCommand = new RelayCommand(
-                    p => reader == null || reader.State == RecordingState.Stoped || reader.State == RecordingState.Paused,
-                    p => StartAudio()));
-            }
-        }
-        ICommand startCommand;
-
-        public ICommand StopCommand
-        {
-            get
-            {
-                return stopCommand ?? (stopCommand = new RelayCommand(
-                    p => reader != null && reader.State == RecordingState.Recording,
-                    p => reader.Stop()));
-            }
-        }
-        ICommand stopCommand;
 
 
         private void StartAudio()
@@ -127,6 +80,59 @@ namespace FreqFind.Lib.ViewModels
         public void AssignCalculatedData(object sender, FFTEventArgs e)
         {
             soundNote.GetNote(e.Result, AudioOptions.SampleRate);
+        }
+
+
+        public ICommand StartCommand
+        {
+            get
+            {
+                return startCommand ?? (startCommand = new RelayCommand(
+                    p => reader == null || reader.State == RecordingState.Stoped || reader.State == RecordingState.Paused,
+                    p => StartAudio()));
+            }
+        }
+        ICommand startCommand;
+
+        public ICommand StopCommand
+        {
+            get
+            {
+                return stopCommand ?? (stopCommand = new RelayCommand(
+                    p => reader != null && reader.State == RecordingState.Recording,
+                    p => reader.Stop()));
+            }
+        }
+        ICommand stopCommand;
+
+        public ICommand OpenAudioSettingsCommand
+        {
+            get
+            {
+                return openAudioSettingsCommand ?? (openAudioSettingsCommand = new RelayCommand(
+                      p => true,
+                      p => DisplaySettingsWindow()));
+            }
+        }
+        ICommand openAudioSettingsCommand;
+        void DisplaySettingsWindow()
+        {
+            if (settingsViewModel == null)
+                settingsViewModel = new SettingsViewModel(AudioOptions);
+
+            if (reader != null)
+                reader.Stop();
+            settingsViewModel.ResolveDialog();
+        }
+
+        private AudioSettings DefaultSettings()
+        {
+            return new AudioSettings()
+            {
+                BufferSize = 8192,
+                SampleRate = 44100,
+                SelectedDevice = SettingsViewModel.GetDevices().FirstOrDefault()
+            };
         }
     }
 }

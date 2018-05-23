@@ -8,12 +8,20 @@ namespace FreqFind.Lib.Helpers
 {
     public static class FFTProcessor
     {
-        public static void ChirpTransform(Complex[] input, int startFrequency, int endFrequency, int prazkiCount, int sampleRate)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="input">Raw data from buffer: Real contains sampled values, Imaginary is filled with 0</param>
+        /// <param name="leftTreshold">First frequency value of the zoom</param>
+        /// <param name="rightTreshold">Last frequency value of the zoom</param>
+        /// <param name="zoomedLength">Number of the frequencies in specified range</param>
+        /// <param name="sampleRate">Sample rate</param>
+        public static void ChirpTransform(Complex[] input, int leftTreshold, int rightTreshold, int zoomedLength, int sampleRate)
         {
             var samplesLength = input.Length;
-            var NM1 = samplesLength + prazkiCount - 1;
-            var A = Complex.Exp(new Complex(0, -2 * Math.PI * startFrequency / sampleRate));
-            var W = Complex.Exp(new Complex(0, -2 * Math.PI * ((endFrequency - startFrequency) / (2 * (prazkiCount - 1)) / sampleRate)));
+            var NM1 = samplesLength + zoomedLength - 1;
+            var A = Complex.Exp(new Complex(0, -2 * Math.PI * leftTreshold / sampleRate));
+            var W = Complex.Exp(new Complex(0, -2 * Math.PI * ((rightTreshold - leftTreshold) / (2 * (zoomedLength - 1)) / sampleRate)));
 
             var y1 = new Complex[samplesLength];
             var y2 = new Complex[samplesLength];
@@ -26,14 +34,52 @@ namespace FreqFind.Lib.Helpers
                 else
                     y1[k] = 0;
 
-                if (k < prazkiCount)
+                if (k < zoomedLength)
                     y2[k] = Complex.Pow(W, -k / 2);
                 else
                     y2[k] = Complex.Pow(W, (-Math.Pow((NM1 - k), 2)));
 
             }
         }
-        public static void TransformRadix2(Complex[] vector, bool inverse)
+        /// <summary>
+        /// Chirp transfrom that will operate only on samples that are power of 2
+        /// </summary>
+        /// <param name="input">Raw data from buffer: Real contains sampled values, Imaginary is filled with 0</param>
+        /// <param name="leftTreshold">First frequency value of the magnifier</param>
+        /// <param name="rightTreshold">Last frequency value of the magnifier</param>
+        /// <param name="sampleRate">Sample rate</param>
+        public static void ChirpTransform(Complex[] input, int leftThreshold, int rightTreshold, int sampleRate)
+        {
+
+        }
+        static void Convolve(Complex[] xvector, Complex[] yvector, Complex[] outvector)
+        {
+            int n = xvector.Length;
+            if (n != yvector.Length || n != outvector.Length)
+                throw new ArgumentException("Mismatched lengths");
+            xvector = (Complex[])xvector.Clone();
+            yvector = (Complex[])yvector.Clone();
+            Transform(xvector, false);
+            Transform(yvector, false);
+            for (int i = 0; i < n; i++)
+                xvector[i] *= yvector[i];
+            Transform(xvector, true);
+            for (int i = 0; i < n; i++)  // Scaling (because this FFT implementation omits it)
+                outvector[i] = xvector[i] / n;
+        }
+
+        public static void Transform(Complex[] vector, bool inverse)
+        {
+            int n = vector.Length;
+            if (n == 0)
+                return;
+            else if ((n & (n - 1)) == 0)  // Is power of 2
+                TransformRadix2(vector, inverse);
+            else  // More complicated algorithm for arbitrary sizes
+                TransformBluestein(vector, inverse);
+        }
+
+        static void TransformRadix2(Complex[] vector, bool inverse)
         {
             // Length variables
             int n = vector.Length;
@@ -42,6 +88,7 @@ namespace FreqFind.Lib.Helpers
                 levels++;
             if (1 << levels != n)
                 throw new ArgumentException("Length is not a power of 2");
+
 
             // Trigonometric table
             Complex[] expTable = new Complex[n / 2];
@@ -52,17 +99,16 @@ namespace FreqFind.Lib.Helpers
             // Bit-reversed addressing permutation
             for (int i = 0; i < n; i++)
             {
-                //Debug.Write(string.Format($"Before: {i}"));
-                int j = (int)((uint)ReverseBits(i) >> (32 - levels));
+                int j = (int)((uint)FFTHelpers.ReverseBits(i) >> (32 - levels));
                 if (j > i)
                 {
                     Complex temp = vector[i];
                     vector[i] = vector[j];
                     vector[j] = temp;
                 }
-                //Debug.WriteLine($"\tAfter: {j}");
 
             }
+            #region WIKI
             //IMPLEMENTED PSEUDOCODE FROM https://en.wikipedia.org/wiki/Cooley–Tukey_FFT_algorithm
             //for (int s = 1; s < Math.Log(n, 2); s++)
             //{
@@ -82,7 +128,7 @@ namespace FreqFind.Lib.Helpers
             //        }
             //    }
             //}
-
+            #endregion
             //Cooley - Tukey decimation -in-time radix - 2 FFT
             for (int size = 2; size <= n; size *= 2)
             {
@@ -101,12 +147,42 @@ namespace FreqFind.Lib.Helpers
                     break;
             }
         }
-        private static int ReverseBits(int val)
+
+        static void TransformBluestein(Complex[] vector, bool inverse)
         {
-            int result = 0;
-            for (int i = 0; i < 32; i++, val >>= 1)
-                result = (result << 1) | (val & 1);
-            return result;
+            // Find a power-of-2 convolution length m such that m >= n * 2 + 1
+            int n = vector.Length;
+            if (n >= 0x20000000)
+                throw new ArgumentException("Array too large");
+            int m = 1;
+            while (m < n * 2 + 1)
+                m *= 2;
+
+            // Trignometric table
+            Complex[] expTable = new Complex[n];
+            double coef = Math.PI / n * (inverse ? 1 : -1);
+            for (int i = 0; i < n; i++)
+            {
+                int j = (int)((long)i * i % (n * 2));  // This is more accurate than j = i * i
+                expTable[i] = Complex.Exp(new Complex(0, j * coef));
+            }
+
+            // Temporary vectors and preprocessing
+            Complex[] avector = new Complex[m];
+            for (int i = 0; i < n; i++)
+                avector[i] = vector[i] * expTable[i];
+            Complex[] bvector = new Complex[m];
+            bvector[0] = expTable[0];
+            for (int i = 1; i < n; i++)
+                bvector[i] = bvector[m - i] = Complex.Conjugate(expTable[i]);
+
+            // Convolution
+            Complex[] cvector = new Complex[m];
+            Convolve(avector, bvector, cvector);
+
+            // Postprocessing
+            for (int i = 0; i < n; i++)
+                vector[i] = cvector[i] * expTable[i];
         }
     }
     public static class FFTHelpers
@@ -143,6 +219,14 @@ namespace FreqFind.Lib.Helpers
                     aggregator.AddSample(tmpValue / divisior); //[-1;1]
 
             }
+        }
+
+        public static int ReverseBits(int val)
+        {
+            int result = 0;
+            for (int i = 0; i < 32; i++, val >>= 1)
+                result = (result << 1) | (val & 1);
+            return result;
         }
     }
 }

@@ -16,6 +16,7 @@ namespace FreqFind.Lib.Helpers
     public interface IAudioHelpers
     {
         void ByteArrayTo16BITInputFormat(ref short[] data, byte[] buffer);
+        AudioSettings DefaultSettings();
     }
     public class AudioHelpers_16bitPCM : IAudioHelpers
     {
