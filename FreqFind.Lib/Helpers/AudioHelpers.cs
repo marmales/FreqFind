@@ -1,6 +1,8 @@
 ﻿using FreqFind.Lib.Models;
+using FreqFind.Lib.ViewModels;
 using NAudio.Wave;
 using System;
+using System.Linq;
 
 namespace FreqFind.Lib.Helpers
 {
@@ -13,20 +15,24 @@ namespace FreqFind.Lib.Helpers
     }
 
 
-    public interface IAudioHelpers
+    public static class AudioHelpers
     {
-        void ByteArrayTo16BITInputFormat(ref short[] data, byte[] buffer);
-        AudioSettings DefaultSettings();
-    }
-    public class AudioHelpers_16bitPCM : IAudioHelpers
-    {
-        public void ByteArrayTo16BITInputFormat(ref short[] data, byte[] buffer)
+        public static void ByteArrayTo16BITInputFormat(ref short[] data, byte[] buffer)
         {
             var bufferLength = buffer.Length;
             var targetLength = bufferLength / 2;
             if (data.Length != targetLength)
                 data = new short[targetLength];
             Buffer.BlockCopy(buffer, 0, data, 0, bufferLength);
+        }
+        public static  AudioSettings DefaultSettings()
+        {
+            return new AudioSettings()
+            {
+                BufferSize = 8192,
+                SampleRate = 44100,
+                SelectedDevice = SettingsViewModel.GetDevices().FirstOrDefault()
+            };
         }
     }
 }

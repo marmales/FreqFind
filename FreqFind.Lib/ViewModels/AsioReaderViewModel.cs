@@ -45,7 +45,7 @@ namespace FreqFind.Lib.ViewModels
             throw new NotImplementedException();
         }
 
-        public void Setup(int sampleRate, int channels, int deviceNumber)
+        public void Setup(IAudioReaderModel model)
         {
             throw new NotImplementedException();
         }

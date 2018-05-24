@@ -2,6 +2,7 @@
 using FreqFind.Common;
 using FreqFind.Common.Interfaces;
 using FreqFind.Lib.Helpers;
+using FreqFind.Lib.Models;
 using System;
 using System.Numerics;
 
@@ -10,6 +11,76 @@ namespace FreqFind.Lib.ViewModels
     public class FFTProcessorViewModel : BaseDialogViewModel, IAudioProcessor
     {
         public ISampleAggregator<float> SampleAggregator { get; set; }
+        public IProcessorModel<float> Model { get; set; }
+        public event EventHandler<FFTEventArgs> OnFFTCalculated;
+
+        public FFTProcessorViewModel(IProcessorModel<float> model)
+        {
+            if (this.SampleAggregator != null)
+                SampleAggregator.OnSamplesAccumulated -= Process;
+
+            this.Model = model;
+            this.SampleAggregator = GetAggregator(model);
+            SampleAggregator.OnSamplesAccumulated += Process;
+        }
+
+        private ISampleAggregator<float> GetAggregator(IProcessorModel<float> model)
+        {
+            var chirp = model as ChirpModel;
+            if (chirp != null)
+                return new ZoomedAggregator(chirp.ZoomOptions);
+
+            var simple = model as SimpleFFTModel;
+            if (simple != null)
+                return new SampleAggregator(simple.SamplesCount);
+
+            return null;
+        }
+
+        public void Process(float[] input)
+        {
+            var result = ChirpFFT(input, Model as ChirpModel);
+            //var result = InternalFFT(input);
+
+            FFTHelpers.GetFrequencyValues(ref transformedData, result);
+            OnPropertyChanged(nameof(TransformedData));
+
+            OnFFTCalculated.Invoke(null, new FFTEventArgs(transformedData));
+        }
+
+        private static Complex[] ChirpFFT(float[] data, ChirpModel model)
+        {
+            if (model == null) return null;
+
+            var fftComplex = new Complex[data.Length]; // the FFT function requires complex format
+            for (int i = 0; i < data.Length; i++)
+            {
+                fftComplex[i] = new Complex(data[i], 0.0);// make it complex format (imaginary = 0)
+            }
+
+            FFTProcessor.ChirpTransform(fftComplex, model.ZoomOptions, model.SampleRate);
+            return fftComplex;
+        }
+
+        private static Complex[] InternalFFT(float[] data)
+        {
+            var fftComplex = new Complex[data.Length];
+            for (int i = 0; i < data.Length; i++)
+            {
+                fftComplex[i] = new Complex(data[i], 0.0);
+            }
+            FourierTransform.FFT(fftComplex, FourierTransform.Direction.Backward);
+            return fftComplex;
+        }
+
+        public void Cleanup()
+        {
+            SampleAggregator.OnSamplesAccumulated = null;
+            TransformedData = new double[1];
+        }
+
+
+
         public double[] TransformedData // hide if tone will be implemented
         {
             get { return transformedData; }
@@ -22,67 +93,5 @@ namespace FreqFind.Lib.ViewModels
         }
         double[] transformedData = new double[1];
 
-        public FFTProcessorViewModel(int sampleLength)
-        {
-            this.SampleAggregator = new SampleAggregator(sampleLength);
-            SampleAggregator.OnSamplesAccumulated = Process;
-        }
-
-        public void Process(float[] input)
-        {
-            var result = InternalFFT(input);
-
-            FFTHelpers.GetFrequencyValues(ref transformedData, result);
-            OnPropertyChanged(nameof(TransformedData));
-
-            OnFFTCalculated.Invoke(null, new FFTEventArgs(transformedData));
-        }
-
-        private static Complex[] InternalFFT(float[] data)
-        {
-            var fftComplex = new Complex[data.Length]; // the FFT function requires complex format
-            for (int i = 0; i < data.Length; i++)
-            {
-                fftComplex[i] = new Complex(data[i], 0.0);// make it complex format (imaginary = 0)
-            }
-            //FourierTransform.FFT(fftComplex, FourierTransform.Direction.Backward);
-            FFTProcessor.ChirpTransform(fftComplex, TempGlobalSettings.LeftFreq, TempGlobalSettings.RightFreq, TempGlobalSettings.FreqSamplesCount, 44100);
-            return fftComplex;
-        }
-
-        public void Cleanup()
-        {
-            SampleAggregator.OnSamplesAccumulated = null;
-            TransformedData = new double[1];
-        }
-
-        public event EventHandler<FFTEventArgs> OnFFTCalculated;
-    }
-
-
-    public class SampleAggregator : ISampleAggregator<float>
-    {
-        private int targetLength;
-        private int index;
-        private float[] aggregatedData;
-
-        private static object locker = new object();
-        public SampleAggregator(int length)
-        {
-            targetLength = length;
-            index = 0;
-            aggregatedData = new float[targetLength];
-        }
-        public Action<float[]> OnSamplesAccumulated { get; set; }
-
-        public void AddSample(float data)
-        {
-            aggregatedData[index++] = data;
-            if (index >= targetLength)
-            {
-                index = 0;
-                var result = OnSamplesAccumulated.BeginInvoke(aggregatedData, null, locker);
-            }
-        }
     }
 }

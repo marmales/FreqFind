@@ -13,17 +13,15 @@ namespace FreqFind.Lib.ViewModels
         public AudioReaderViewModel()
         {
         }
-        public void Setup(int sampleRate, int channels, int deviceNumber)
+        public void Setup(IAudioReaderModel model)
         {
-            waveFormat = new WaveFormat(sampleRate, channels);
+            waveFormat = new WaveFormat(model.SampleRate, model.Channels);
             waveIn = new WaveIn()
             {
-                DeviceNumber = deviceNumber,
+                DeviceNumber = model.DeviceNumber,
                 WaveFormat = waveFormat
             };
             waveIn.DataAvailable += OnDataAvailable;
-
-
         }
 
         private void OnDataAvailable(object sender, WaveInEventArgs e)
@@ -45,6 +43,9 @@ namespace FreqFind.Lib.ViewModels
             State = RecordingState.Stoped;
             waveIn.StopRecording();
         }
+
+
+
         public Action<byte[]> OnDataReceived { get; set; }
 
         public RecordingState State

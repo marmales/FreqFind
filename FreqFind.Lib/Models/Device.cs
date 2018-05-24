@@ -6,12 +6,10 @@ namespace FreqFind.Lib.Models
     public class Device : Observable
     {
         public int Id { get; }
-        public int ChannelsCount { get; }
         public string Name { get; }
         public Device(int id, int channels, string name)
         {
             this.Id = id;
-            this.ChannelsCount = channels;
             SetChannelsVolume(channels);
             this.Name = name;
         }

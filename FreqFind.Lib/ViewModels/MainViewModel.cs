@@ -11,15 +11,12 @@ namespace FreqFind.Lib.ViewModels
 {
     public static class TempGlobalSettings
     {
-        public static int LeftFreq { get; set; } = 50;
-        public static int RightFreq { get; set; } = 3000;
-        public static int FreqSamplesCount { get; set; } = 2950;
+        
     }
     public class MainViewModel : BaseDialogViewModel
     {
         private IAudioReader<byte> reader;
         private IAudioProcessor processor;
-        private IAudioHelpers audioHelper;
         private ISoundNote soundNote;
         SettingsViewModel settingsViewModel;
         public MainViewModel()
@@ -27,6 +24,7 @@ namespace FreqFind.Lib.ViewModels
             soundNote = new ToneViewModel();
         }
 
+        #region Properties
         public IAudioProcessor FFTViewModel
         {
             get { return processor; }
@@ -38,11 +36,24 @@ namespace FreqFind.Lib.ViewModels
 
         public AudioSettings AudioOptions
         {
-            get { return audioOptions ?? (audioOptions = DefaultSettings()); }
+            get { return audioOptions ?? (audioOptions = AudioHelpers.DefaultSettings()); }
             set { audioOptions = value; }
         }
         private AudioSettings audioOptions;
 
+
+        private IProcessorModel<float> fftOptions;
+        public IProcessorModel<float> FFTOptions
+        {
+            get { return fftOptions ?? (fftOptions = FFTModelHelpers.GetZoomDefaultFFTOptions(AudioOptions.SampleRate)); }
+            set
+            {
+                if (fftOptions == value) return;
+                fftOptions = value;
+                OnPropertyChanged(nameof(FFTOptions));
+            }
+        }
+        #endregion
 
 
         private void StartAudio()
@@ -52,7 +63,7 @@ namespace FreqFind.Lib.ViewModels
                 processor.Cleanup();
                 processor.OnFFTCalculated -= AssignCalculatedData;
             }
-            processor = new FFTProcessorViewModel(AudioOptions.BufferSize);
+            processor = new FFTProcessorViewModel(FFTOptions);
             processor.OnFFTCalculated += AssignCalculatedData;
             OnPropertyChanged(nameof(FFTViewModel));
 
@@ -61,20 +72,18 @@ namespace FreqFind.Lib.ViewModels
                 reader = new AudioReaderViewModel();
                 reader.OnDataReceived = PrepareInputForFFT;
             }
-            audioHelper = new AudioHelpers_16bitPCM();
 
-            reader.Setup(AudioOptions.SampleRate, AudioOptions.SelectedDevice.ChannelsCount, AudioOptions.SelectedDevice.Id);
+            reader.Setup(GetReaderModel());
             reader.Start();
         }
 
         private short[] receivedData = new short[1];
         private void PrepareInputForFFT(byte[] data)
         {
-            audioHelper.ByteArrayTo16BITInputFormat(ref receivedData, data); //From byte[] To 16bit format
-            FFTHelpers.SendSamples(
-                processor.SampleAggregator,
-                receivedData,
-                AudioOptions.SelectedDevice.Channels.Select(x => x.Volume)); //Process with FFT when buffer will be filled - SoundCard.BufferSize
+            AudioHelpers.ByteArrayTo16BITInputFormat(ref receivedData, data); //From byte[] To 16bit format
+            processor.SampleAggregator.SendSamples(
+                         receivedData,
+                         AudioOptions.SelectedDevice.Channels.Select(x => x.Volume)); //Process with FFT when buffer will be filled - SoundCard.BufferSize
         }
 
         public void AssignCalculatedData(object sender, FFTEventArgs e)
@@ -82,7 +91,7 @@ namespace FreqFind.Lib.ViewModels
             soundNote.GetNote(e.Result, AudioOptions.SampleRate);
         }
 
-
+        #region Commands
         public ICommand StartCommand
         {
             get
@@ -125,14 +134,15 @@ namespace FreqFind.Lib.ViewModels
             settingsViewModel.ResolveDialog();
         }
 
-        private AudioSettings DefaultSettings()
+        IAudioReaderModel GetReaderModel()
         {
-            return new AudioSettings()
+            return new AudioReaderModel
             {
-                BufferSize = 8192,
-                SampleRate = 44100,
-                SelectedDevice = SettingsViewModel.GetDevices().FirstOrDefault()
+                DeviceNumber = AudioOptions.SelectedDevice.Id,
+                Channels = AudioOptions.SelectedDevice.Channels.Count,
+                SampleRate = AudioOptions.SampleRate
             };
         }
+        #endregion
     }
 }
