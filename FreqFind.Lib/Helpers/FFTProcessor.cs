@@ -30,6 +30,12 @@ namespace FreqFind.Lib.Helpers
                     y2[k] = Complex.Pow(W, (-Math.Pow((NM1 - k), 2)));
 
             }
+
+            Transform(y1, false);
+            Transform(y2, false);
+
+            //var out
+            //Convolve(y1, y2, )
         }
         static void Convolve(Complex[] xvector, Complex[] yvector, Complex[] outvector)
         {
@@ -127,8 +133,8 @@ namespace FreqFind.Lib.Helpers
             }
 
             //TEST THIS SHIT
-            for (int i = 0; i < n; i++)  // Scaling (because this FFT implementation omits it)
-                vector[i] /= n;
+            //for (int i = 0; i < n; i++)  // Scaling (because this FFT implementation omits it)
+            //    vector[i] /= n;
         }
 
         static void TransformBluestein(Complex[] vector, bool inverse)

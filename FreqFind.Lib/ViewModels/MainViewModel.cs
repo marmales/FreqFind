@@ -45,7 +45,7 @@ namespace FreqFind.Lib.ViewModels
         private IProcessorModel<float> fftOptions;
         public IProcessorModel<float> FFTOptions
         {
-            get { return fftOptions ?? (fftOptions = FFTModelHelpers.GetZoomDefaultFFTOptions(AudioOptions.SampleRate)); }
+            get { return fftOptions ?? (fftOptions = FFTModelHelpers.GetDefaultFFTOptions(AudioOptions.BufferSize)); }
             set
             {
                 if (fftOptions == value) return;

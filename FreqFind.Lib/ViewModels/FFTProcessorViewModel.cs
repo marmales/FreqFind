@@ -39,8 +39,9 @@ namespace FreqFind.Lib.ViewModels
 
         public void Process(float[] input)
         {
-            var result = ChirpFFT(input, Model as ChirpModel);
-            //var result = InternalFFT(input);
+            //var result = ChirpFFT(input, Model as ChirpModel);
+            var result = InternalFFT(input);
+            //FourierTransform.FFT(input, FourierTransform.Direction.Forward);
 
             FFTHelpers.GetFrequencyValues(ref transformedData, result);
             OnPropertyChanged(nameof(TransformedData));
@@ -69,6 +70,7 @@ namespace FreqFind.Lib.ViewModels
             {
                 fftComplex[i] = new Complex(data[i], 0.0);
             }
+            //FFTProcessor.Transform(fftComplex, false);
             FourierTransform.FFT(fftComplex, FourierTransform.Direction.Backward);
             return fftComplex;
         }
