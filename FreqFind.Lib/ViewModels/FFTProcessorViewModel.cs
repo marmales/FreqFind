@@ -70,8 +70,8 @@ namespace FreqFind.Lib.ViewModels
             {
                 fftComplex[i] = new Complex(data[i], 0.0);
             }
-            //FFTProcessor.Transform(fftComplex, false);
-            FourierTransform.FFT(fftComplex, FourierTransform.Direction.Backward);
+            FFTProcessor.Transform(fftComplex, false);
+            //FourierTransform.FFT(fftComplex, FourierTransform.Direction.Forward);
             return fftComplex;
         }
 

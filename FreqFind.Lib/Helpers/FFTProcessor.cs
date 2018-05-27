@@ -62,6 +62,9 @@ namespace FreqFind.Lib.Helpers
                 TransformRadix2(vector, inverse);
             else  // More complicated algorithm for arbitrary sizes
                 TransformBluestein(vector, inverse);
+
+            for (int i = 0; i < n; i++)  // Scaling (because this FFT implementation omits it)
+                vector[i] /= n;
         }
 
         static void TransformRadix2(Complex[] vector, bool inverse)
