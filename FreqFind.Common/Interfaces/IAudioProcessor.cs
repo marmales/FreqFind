@@ -11,6 +11,7 @@ namespace FreqFind.Common.Interfaces
     }
     public interface IProcessorModel<T>
     {
+        int SampleRate { get; set; }
     }
     public interface ISampleAggregator<T> where T : struct
     {

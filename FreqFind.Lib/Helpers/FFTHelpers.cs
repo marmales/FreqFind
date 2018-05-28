@@ -1,4 +1,5 @@
-﻿using FreqFind.Common.Interfaces;
+﻿using Accord.Math;
+using FreqFind.Common.Interfaces;
 using FreqFind.Lib.Models;
 using System;
 using System.Collections.Generic;
@@ -9,11 +10,12 @@ namespace FreqFind.Lib.Helpers
 {
     public static class FFTModelHelpers
     {
-        public static IProcessorModel<float> GetDefaultFFTOptions(int samplesCount)
+        public static IProcessorModel<float> GetDefaultFFTOptions(int samplesCount, int sampleRate)
         {
             return new SimpleFFTModel
             {
-                SamplesCount = samplesCount
+                SamplesCount = samplesCount,
+                SampleRate = sampleRate
             };
         }
         public static IProcessorModel<float> GetZoomDefaultFFTOptions(int sampleRate)
@@ -21,17 +23,58 @@ namespace FreqFind.Lib.Helpers
             return new ChirpModel
             {
                 SampleRate = sampleRate,
-                ZoomOptions = new MagnifierModel()
-                {
-                    LeftThreshold = 50,
-                    RightThreshold = 3000,
-                    NumberOfSamples = 2950
-                }
+                ZoomOptions = new MagnifierModel(50, 3000)
             };
+        }
+
+        public static void GetProcessRange(this IProcessorModel<float> model, Complex[] data)
+        {
+            var chirpModel = model as ChirpModel;
+            if (chirpModel == null)
+                return;
+
+            var outputData = new double[data.Length];
+
+            FFTHelpers.GetFrequencyValues(ref outputData, data);
+            var highestValueIndex = outputData.IndexOf(outputData.Max());
+            var highestValue = FrequencyHelpers.GetValue(outputData, highestValueIndex, chirpModel.SampleRate);
+
+            var leftThreshold = model.GetLeftThreshold(highestValue, highestValueIndex, outputData);
+            var rightThreshold = model.GetRightThreshold(highestValue, highestValueIndex, outputData);
+            chirpModel.ZoomOptions.Update(leftThreshold, rightThreshold);
+        }
+        static int GetLeftThreshold(this IProcessorModel<float> model, double value, int index, double[] outputdata)
+        {
+            if (index < MagnifierModel.MIN_CHIRP_SAMPLES / 2)
+                return MagnifierModel.MIN_CHIRP_SAMPLES / 2;
+            var leftMaxRange = MagnifierModel.MAX_CHIRP_SAMPLES / 2;
+            int i = index - 1;
+            for (; i > index - leftMaxRange && i > 0; i--)
+            {
+                var currentFrequencyValue = FrequencyHelpers.GetValue(outputdata, i, model.SampleRate);
+                if (value - currentFrequencyValue > MagnifierModel.DECYBELS_RANGE_DIFFERENCE)
+                    return i;
+            }
+            return i == 0 ? 0 : -1;
+        }
+        static int GetRightThreshold(this IProcessorModel<float> model, double value, int index, double[] outputdata)
+        {
+            if (index < MagnifierModel.MIN_CHIRP_SAMPLES / 2)
+                return MagnifierModel.MIN_CHIRP_SAMPLES / 2;
+            var rightMaxRange = MagnifierModel.MAX_CHIRP_SAMPLES / 2;
+            int i = index - 1;
+            for (; i < index + rightMaxRange && i < outputdata.Length; i++)
+            {
+                var currentFrequencyValue = FrequencyHelpers.GetValue(outputdata, i, model.SampleRate);
+                if (value - currentFrequencyValue > MagnifierModel.DECYBELS_RANGE_DIFFERENCE)
+                    return i;
+            }
+            return i == 0 ? 0 : -1;
         }
     }
     public static class FFTHelpers
     {
+
         public static void GetFrequencyValues(ref double[] result, Complex[] fftData)
         {
             var targetArrayLength = fftData.Length / 2;

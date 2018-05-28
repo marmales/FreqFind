@@ -39,11 +39,16 @@ namespace FreqFind.Lib.ViewModels
 
         public void Process(float[] input)
         {
-            //var result = ChirpFFT(input, Model as ChirpModel);
-            var result = InternalFFT(input);
-            //FourierTransform.FFT(input, FourierTransform.Direction.Forward);
+            var chirp = Model as ChirpModel;
+            if (chirp == null)
+                return;
 
-            FFTHelpers.GetFrequencyValues(ref transformedData, result);
+            var globalResult = InternalFFT(input);
+            chirp.GetProcessRange(globalResult);
+
+            var globalLeftThreshold = 80;
+            var globalRightThreshold = 2400;//look at tone implementation
+
             OnPropertyChanged(nameof(TransformedData));
 
             OnFFTCalculated.Invoke(null, new FFTEventArgs(transformedData));
@@ -80,7 +85,6 @@ namespace FreqFind.Lib.ViewModels
             SampleAggregator.OnSamplesAccumulated = null;
             TransformedData = new double[1];
         }
-
 
 
         public double[] TransformedData // hide if tone will be implemented

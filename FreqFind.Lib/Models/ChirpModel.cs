@@ -38,6 +38,16 @@ namespace FreqFind.Lib.Models
                 OnPropertyChanged(nameof(SamplesCount));
             }
         }
-
+        private int sampleRate;
+        public int SampleRate
+        {
+            get { return sampleRate; }
+            set
+            {
+                if (sampleRate == value) return;
+                sampleRate = value;
+                OnPropertyChanged(nameof(SampleRate));
+            }
+        }
     }
 }

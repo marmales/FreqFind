@@ -1,5 +1,6 @@
 ﻿using FreqFind.Lib.Models;
 using System;
+using System.Linq;
 using System.Numerics;
 
 namespace FreqFind.Lib.Helpers
@@ -34,8 +35,13 @@ namespace FreqFind.Lib.Helpers
             Transform(y1, false);
             Transform(y2, false);
 
-            //var out
-            //Convolve(y1, y2, )
+            var outvector = new Complex[y1.Length];
+            Convolve(y1, y2, outvector);
+
+            for (int k = 0; k < zoom.NumberOfSamples; k++)
+                outvector[k] *= Complex.Pow(W, Math.Pow(k, 2));
+
+            outvector = outvector.Take(zoom.NumberOfSamples).ToArray();
         }
         static void Convolve(Complex[] xvector, Complex[] yvector, Complex[] outvector)
         {
@@ -49,6 +55,7 @@ namespace FreqFind.Lib.Helpers
             for (int i = 0; i < n; i++)
                 xvector[i] *= yvector[i];
             Transform(xvector, true);
+
             for (int i = 0; i < n; i++)  // Scaling (because this FFT implementation omits it)
                 outvector[i] = xvector[i] / n;
         }
@@ -62,9 +69,6 @@ namespace FreqFind.Lib.Helpers
                 TransformRadix2(vector, inverse);
             else  // More complicated algorithm for arbitrary sizes
                 TransformBluestein(vector, inverse);
-
-            for (int i = 0; i < n; i++)  // Scaling (because this FFT implementation omits it)
-                vector[i] /= n;
         }
 
         static void TransformRadix2(Complex[] vector, bool inverse)

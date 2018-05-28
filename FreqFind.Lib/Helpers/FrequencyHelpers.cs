@@ -4,7 +4,7 @@ namespace FreqFind.Lib.Helpers
 {
     public static class FrequencyHelpers
     {
-        public static double GetValue<T>(IList<T> frequencies, int index, int sampleRate = 44100)
+        public static double GetValue<T>(IList<T> frequencies, int index, int sampleRate)
         {
             return (double)index / frequencies.Count * sampleRate / 2000.0; // in KHz
         }

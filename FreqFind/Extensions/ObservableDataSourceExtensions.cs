@@ -12,7 +12,7 @@ namespace FreqFind.Extensions
 {
     public static class ObservableDataSourceExtensions
     {
-        public static void AssignFrequencyValues(this ObservableDataSource<Point> source, double[] newValues)
+        public static void AssignFrequencyValues(this ObservableDataSource<Point> source, double[] newValues, int sampleRate)
         {
             if (newValues == null) return;
 
@@ -20,7 +20,7 @@ namespace FreqFind.Extensions
             source.Collection.Clear();
             for (int i = 0; i < newValues.Length; i+=20)
             {
-                var x = FrequencyHelpers.GetValue(newValues, i);
+                var x = FrequencyHelpers.GetValue(newValues, i, sampleRate);
                 source.Collection.Add(new Point { X = x, Y = newValues[i] });
             }
             source.ResumeUpdate();
