@@ -68,6 +68,7 @@
     <Compile Include="Helpers\FFTProcessor.cs" />
     <Compile Include="Helpers\FrequencyHelpers.cs" />
     <Compile Include="Helpers\SampleAggregator.cs" />
+    <Compile Include="Helpers\ToneHelpers.cs" />
     <Compile Include="Models\AudioReaderModel.cs" />
     <Compile Include="Models\AudioSettings.cs" />
     <Compile Include="Models\Channel.cs" />

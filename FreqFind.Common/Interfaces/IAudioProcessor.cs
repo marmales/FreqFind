@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace FreqFind.Common.Interfaces
 {
@@ -12,6 +13,7 @@ namespace FreqFind.Common.Interfaces
     public interface IProcessorModel<T>
     {
         int SampleRate { get; set; }
+        int InputSamplesCount { get; set; }
     }
     public interface ISampleAggregator<T> where T : struct
     {
@@ -21,10 +23,10 @@ namespace FreqFind.Common.Interfaces
 
     public class FFTEventArgs : EventArgs
     {
-        public FFTEventArgs(double[] result)
+        public FFTEventArgs()
         {
-            Result = result;
         }
+        public IEnumerable<double> LocalPeaks { get; set; }
         public double[] Result { get; set; }
     }
 }

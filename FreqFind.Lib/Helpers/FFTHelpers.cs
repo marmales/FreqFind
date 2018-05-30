@@ -14,20 +14,21 @@ namespace FreqFind.Lib.Helpers
         {
             return new SimpleFFTModel
             {
-                SamplesCount = samplesCount,
+                InputSamplesCount = samplesCount,
                 SampleRate = sampleRate
             };
         }
-        public static IProcessorModel<float> GetZoomDefaultFFTOptions(int sampleRate)
+        public static IProcessorModel<float> GetZoomDefaultFFTOptions(int samplesCount, int sampleRate)
         {
             return new ChirpModel
             {
                 SampleRate = sampleRate,
+                InputSamplesCount = samplesCount,
                 ZoomOptions = new MagnifierModel(50, 3000)
             };
         }
 
-        public static void GetProcessRange(this IProcessorModel<float> model, Complex[] data)
+        public static void GetMainProcessRange(this IProcessorModel<float> model, Complex[] data)
         {
             var chirpModel = model as ChirpModel;
             if (chirpModel == null)
@@ -35,12 +36,12 @@ namespace FreqFind.Lib.Helpers
 
             var outputData = new double[data.Length];
 
-            FFTHelpers.GetFrequencyValues(ref outputData, data);
-            var highestValueIndex = outputData.IndexOf(outputData.Max());
-            var highestValue = FrequencyHelpers.GetValue(outputData, highestValueIndex, chirpModel.SampleRate);
+            data.GetFrequencyValues(ref outputData);
+            var highestValueIndex = FrequencyHelpers.GetIndex(outputData, outputData.Max());
+            var highestValue = outputData.LoudestFrequency(chirpModel.SampleRate);
 
-            var leftThreshold = model.GetLeftThreshold(highestValue, highestValueIndex, outputData);
-            var rightThreshold = model.GetRightThreshold(highestValue, highestValueIndex, outputData);
+            var leftThreshold = chirpModel.GetLeftThreshold(highestValue, highestValueIndex, outputData);
+            var rightThreshold = chirpModel.GetRightThreshold(highestValue, highestValueIndex, outputData);
             chirpModel.ZoomOptions.Update(leftThreshold, rightThreshold);
         }
         static int GetLeftThreshold(this IProcessorModel<float> model, double value, int index, double[] outputdata)
@@ -75,7 +76,7 @@ namespace FreqFind.Lib.Helpers
     public static class FFTHelpers
     {
 
-        public static void GetFrequencyValues(ref double[] result, Complex[] fftData)
+        public static double[] GetFrequencyValues(this Complex[] fftData, ref double[] result)
         {
             var targetArrayLength = fftData.Length / 2;
             if (targetArrayLength != result.Length)
@@ -84,6 +85,7 @@ namespace FreqFind.Lib.Helpers
             {
                 result[i] = 20 * Math.Log10(fftData[i].Magnitude);//System.Math.Sqrt(im2 + re2)
             }
+            return result;
         }
 
         public static void SendSamples(this ISampleAggregator<float> aggregator, short[] data, IEnumerable<int> channelsVolume)

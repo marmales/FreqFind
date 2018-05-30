@@ -1,7 +1,10 @@
-﻿namespace FreqFind.Common.Interfaces
+﻿using System.Collections.Generic;
+
+namespace FreqFind.Common.Interfaces
 {
     public interface ISoundNote
     {
+        INote GetNote(IEnumerable<double> localPeaks);
         INote GetNote(double[] frequencies, int sampleRate);
     }
 

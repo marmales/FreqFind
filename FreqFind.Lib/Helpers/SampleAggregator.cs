@@ -33,15 +33,4 @@ namespace FreqFind.Lib.Helpers
             aggregatedData = new float[targetLength];
         }
     }
-    /// <summary>
-    /// 
-    /// </summary>
-    public class ZoomedAggregator : SampleAggregatorBase
-    {
-        //should i add target length to constructor as well?
-        public ZoomedAggregator(MagnifierModel model)
-        {
-
-        }
-    }
 }

@@ -45,7 +45,7 @@ namespace FreqFind.Lib.ViewModels
         private IProcessorModel<float> fftOptions;
         public IProcessorModel<float> FFTOptions
         {
-            get { return fftOptions ?? (fftOptions = FFTModelHelpers.GetDefaultFFTOptions(AudioOptions.BufferSize, AudioOptions.SampleRate)); }
+            get { return fftOptions ?? (fftOptions = FFTModelHelpers.GetZoomDefaultFFTOptions(AudioOptions.BufferSize, AudioOptions.SampleRate)); }
             set
             {
                 if (fftOptions == value) return;
@@ -88,7 +88,10 @@ namespace FreqFind.Lib.ViewModels
 
         public void AssignCalculatedData(object sender, FFTEventArgs e)
         {
-            soundNote.GetNote(e.Result, AudioOptions.SampleRate);
+            if (e.LocalPeaks != null && e.LocalPeaks.Count() != 0)
+                NoteViewModel.GetNote(e.LocalPeaks);
+            else if (e.Result != null && e.Result.Length != 0)
+                NoteViewModel.GetNote(e.Result, AudioOptions.SampleRate);
         }
 
         #region Commands

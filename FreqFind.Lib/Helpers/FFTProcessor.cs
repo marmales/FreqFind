@@ -10,9 +10,9 @@ namespace FreqFind.Lib.Helpers
         public static void ChirpTransform(Complex[] input, MagnifierModel zoom, int sampleRate)
         {
             var samplesLength = input.Length;
-            var NM1 = samplesLength + zoom.NumberOfSamples - 1;
+            var NM1 = samplesLength + zoom.TargetNumberOfSamples - 1;
             var A = Complex.Exp(new Complex(0, -2 * Math.PI * zoom.LeftThreshold / zoom.RightThreshold));
-            var W = Complex.Exp(new Complex(0, -2 * Math.PI * ((zoom.RightThreshold - zoom.LeftThreshold) / (2 * (zoom.NumberOfSamples - 1)) / sampleRate)));
+            var W = Complex.Exp(new Complex(0, -2 * Math.PI * ((zoom.RightThreshold - zoom.LeftThreshold) / (2 * (zoom.TargetNumberOfSamples - 1)) / sampleRate)));
 
             var y1 = new Complex[samplesLength];
             var y2 = new Complex[samplesLength];
@@ -25,7 +25,7 @@ namespace FreqFind.Lib.Helpers
                 else
                     y1[k] = 0;
 
-                if (k < zoom.NumberOfSamples)
+                if (k < zoom.TargetNumberOfSamples)
                     y2[k] = Complex.Pow(W, -k / 2);
                 else
                     y2[k] = Complex.Pow(W, (-Math.Pow((NM1 - k), 2)));
@@ -38,10 +38,10 @@ namespace FreqFind.Lib.Helpers
             var outvector = new Complex[y1.Length];
             Convolve(y1, y2, outvector);
 
-            for (int k = 0; k < zoom.NumberOfSamples; k++)
+            for (int k = 0; k < zoom.TargetNumberOfSamples; k++)
                 outvector[k] *= Complex.Pow(W, Math.Pow(k, 2));
 
-            outvector = outvector.Take(zoom.NumberOfSamples).ToArray();
+            //outvector = outvector.Take(zoom.NumberOfSamples).ToArray();
         }
         static void Convolve(Complex[] xvector, Complex[] yvector, Complex[] outvector)
         {
