@@ -18,9 +18,10 @@ namespace FreqFind.Extensions
 
             source.SuspendUpdate();
             source.Collection.Clear();
+            var length = newValues.Length;
             for (int i = 0; i < newValues.Length; i+=20)
             {
-                var x = FrequencyHelpers.GetValue(newValues, i, sampleRate);
+                var x = FrequencyHelpers.GetValue(length, i, sampleRate);
                 source.Collection.Add(new Point { X = x, Y = newValues[i] });
             }
             source.ResumeUpdate();

@@ -8,11 +8,11 @@ namespace FreqFind.Lib.Helpers
         public static double LoudestFrequency<T>(this IList<T> frequencies, int sampleRate)
         {
             int highestValueIndex = GetIndex(frequencies, frequencies.Max());
-            return GetValue(frequencies, highestValueIndex, sampleRate);
+            return GetValue(frequencies.Count, highestValueIndex, sampleRate);
         }
-        public static double GetValue<T>(IList<T> frequencies, int index, int sampleRate)
+        public static double GetValue(int samplesCount, int index, int sampleRate)
         {
-            return (double)index / frequencies.Count * sampleRate / 2000.0; // in KHz
+            return (double)index / samplesCount * sampleRate; // in Hz
         }
         public static int GetIndex<T>(IList<T> frequencies, T value)
         {

@@ -22,8 +22,10 @@ namespace FreqFind.Lib.ViewModels
                 SampleAggregator.OnSamplesAccumulated -= Process;
 
             this.Model = model;
-            this.SampleAggregator = GetAggregator(model);
-            SampleAggregator.OnSamplesAccumulated += Process;
+            this.SampleAggregator = new SampleAggregator(model.InputSamplesCount)
+            {
+                OnSamplesAccumulated = Process
+            };
         }
 
         public void Process(float[] input)
@@ -76,7 +78,7 @@ namespace FreqFind.Lib.ViewModels
             return new ChirpModel
             {
                 SampleRate = model.SampleRate,
-                ZoomOptions = new MagnifierModel(newLeftThreshold, newRightThreshold)
+                //ZoomOptions = new MagnifierModel(newLeftThreshold, newRightThreshold)
             };
         }
         private static Complex[] ChirpFFT(float[] data, ChirpModel model)
@@ -102,10 +104,6 @@ namespace FreqFind.Lib.ViewModels
             }
             FFTProcessor.Transform(fftComplex, false);
             return fftComplex;
-        }
-        private ISampleAggregator<float> GetAggregator(IProcessorModel<float> model)
-        {
-            return new SampleAggregator(model.InputSamplesCount);
         }
         public void Cleanup()
         {

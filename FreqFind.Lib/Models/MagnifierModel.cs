@@ -5,17 +5,25 @@ namespace FreqFind.Lib.Models
 {
     public class MagnifierModel : Observable
     {
-        public const double FREQUENCY_DIFFERENCE = 0.1; // 0.1Hz
-        public const int MAX_CHIRP_SAMPLES = 2048;
-        public const int MIN_CHIRP_SAMPLES = 128;
-        public const int DECYBELS_RANGE_DIFFERENCE = 20; //20db
-        public MagnifierModel(double leftThreshold, double rightThreshold)
+        public MagnifierModel()
         {
-            Update(leftThreshold, rightThreshold);
         }
 
+        private double baseFreq;
+        public double BaseFrequency
+        {
+            get { return baseFreq; }
+            set
+            {
+                if (baseFreq == value) return;
+                baseFreq = value;
+                OnPropertyChanged(nameof(BaseFrequency));
+            }
+        }
+
+
         private double leftFrequency;
-        public double LeftThreshold
+        public double LeftThreshold // Array index
         {
             get { return leftFrequency; }
             set
@@ -27,7 +35,7 @@ namespace FreqFind.Lib.Models
         }
 
         private double rightFrequency;
-        public double RightThreshold
+        public double RightThreshold //Array index
         {
             get { return rightFrequency; }
             set
@@ -49,19 +57,5 @@ namespace FreqFind.Lib.Models
                 OnPropertyChanged(nameof(TargetNumberOfSamples));
             }
         }
-        public void Update(double leftThreshold, double rightThreshold)
-        {
-            LeftThreshold = leftThreshold;
-            RightThreshold = rightThreshold;
-            Update();
-        }
-        private void Update()
-        {
-            if (LeftThreshold == 0 || RightThreshold == 0)
-                return;
-            var samples = (int)((rightFrequency - leftFrequency) / FREQUENCY_DIFFERENCE); // number of samples where length beetwen each sample is equal 0.1Hz
-            TargetNumberOfSamples = Math.Max(samples, MIN_CHIRP_SAMPLES);
-        }
-
     }
 }

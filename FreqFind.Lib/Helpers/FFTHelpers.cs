@@ -1,4 +1,5 @@
 ﻿using Accord.Math;
+using FreqFind.Common;
 using FreqFind.Common.Interfaces;
 using FreqFind.Lib.Models;
 using System;
@@ -24,7 +25,7 @@ namespace FreqFind.Lib.Helpers
             {
                 SampleRate = sampleRate,
                 InputSamplesCount = samplesCount,
-                ZoomOptions = new MagnifierModel(50, 3000)
+                ZoomOptions = new MagnifierModel()
             };
         }
 
@@ -34,57 +35,33 @@ namespace FreqFind.Lib.Helpers
             if (chirpModel == null)
                 return;
 
-            var outputData = new double[data.Length];
-
-            data.GetFrequencyValues(ref outputData);
-            var highestValueIndex = FrequencyHelpers.GetIndex(outputData, outputData.Max());
-            var highestValue = outputData.LoudestFrequency(chirpModel.SampleRate);
-
-            var leftThreshold = chirpModel.GetLeftThreshold(highestValue, highestValueIndex, outputData);
-            var rightThreshold = chirpModel.GetRightThreshold(highestValue, highestValueIndex, outputData);
-            chirpModel.ZoomOptions.Update(leftThreshold, rightThreshold);
+            var outputData = data.GetFrequencyValues();
+            var loudestIndex = outputData.ToList().IndexOf(outputData.Max());
+            chirpModel.Update(loudestIndex - 10, loudestIndex + 10);
+            chirpModel.ZoomOptions.BaseFrequency = GetHarmonyDifference(loudestIndex);
         }
-        static int GetLeftThreshold(this IProcessorModel<float> model, double value, int index, double[] outputdata)
+
+        private static double GetHarmonyDifference(int loudestIndex)
         {
-            if (index < MagnifierModel.MIN_CHIRP_SAMPLES / 2)
-                return MagnifierModel.MIN_CHIRP_SAMPLES / 2;
-            var leftMaxRange = MagnifierModel.MAX_CHIRP_SAMPLES / 2;
-            int i = index - 1;
-            for (; i > index - leftMaxRange && i > 0; i--)
-            {
-                var currentFrequencyValue = FrequencyHelpers.GetValue(outputdata, i, model.SampleRate);
-                if (value - currentFrequencyValue > MagnifierModel.DECYBELS_RANGE_DIFFERENCE)
-                    return i;
-            }
-            return i == 0 ? 0 : -1;
-        }
-        static int GetRightThreshold(this IProcessorModel<float> model, double value, int index, double[] outputdata)
-        {
-            if (index < MagnifierModel.MIN_CHIRP_SAMPLES / 2)
-                return MagnifierModel.MIN_CHIRP_SAMPLES / 2;
-            var rightMaxRange = MagnifierModel.MAX_CHIRP_SAMPLES / 2;
-            int i = index - 1;
-            for (; i < index + rightMaxRange && i < outputdata.Length; i++)
-            {
-                var currentFrequencyValue = FrequencyHelpers.GetValue(outputdata, i, model.SampleRate);
-                if (value - currentFrequencyValue > MagnifierModel.DECYBELS_RANGE_DIFFERENCE)
-                    return i;
-            }
-            return i == 0 ? 0 : -1;
+            //GlobalSettings.TemperedTones_440Hz
         }
     }
     public static class FFTHelpers
     {
-
+        public static IEnumerable<double> GetFrequencyValues(this Complex[] fftData)
+        {
+            foreach (var item in fftData.Take(fftData.Length / 2))
+                yield return Math.Log10(item.Magnitude);
+        }
         public static double[] GetFrequencyValues(this Complex[] fftData, ref double[] result)
         {
             var targetArrayLength = fftData.Length / 2;
             if (targetArrayLength != result.Length)
                 result = new double[targetArrayLength];
+
             for (int i = 0; i < targetArrayLength; i++)
-            {
-                result[i] = 20 * Math.Log10(fftData[i].Magnitude);//System.Math.Sqrt(im2 + re2)
-            }
+                result[i] = 20 * Math.Log10(fftData[i].Magnitude);
+
             return result;
         }
 
