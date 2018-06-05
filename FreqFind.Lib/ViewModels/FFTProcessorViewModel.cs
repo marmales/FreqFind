@@ -1,6 +1,5 @@
 ﻿using Accord.Math;
 using FreqFind.Common;
-using FreqFind.Common.Extensions;
 using FreqFind.Common.Interfaces;
 using FreqFind.Lib.Helpers;
 using FreqFind.Lib.Models;
@@ -8,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Threading.Tasks;
 
 namespace FreqFind.Lib.ViewModels
 {
@@ -36,7 +34,7 @@ namespace FreqFind.Lib.ViewModels
             if (chirp == null)
                 return;
 
- 
+
             var globalResult = InternalFFT(input);
             var outputData = globalResult.GetFrequencyValues().ToList();//.ToListAsync();
 
@@ -44,9 +42,9 @@ namespace FreqFind.Lib.ViewModels
             while (rangeList.Count < 5)
                 rangeList.Add(rangeList.Last().GetNextFundamental());
 
-            var peaks = GetLocalPeaks(outputData, rangeList, chirp);
+            var peaks = GetLocalPeaks(outputData, rangeList, chirp).ToList();
 
-            OnFFTCalculated.Invoke(null, new FFTEventArgs() { LocalPeaks = peaks });
+            //OnFFTCalculated.Invoke(null, new FFTEventArgs() { LocalPeaks = peaks });
         }
         private static IEnumerable<double> GetLocalPeaks(List<double> data, IEnumerable<LocalRange> models, ChirpModel mainModel)
         {

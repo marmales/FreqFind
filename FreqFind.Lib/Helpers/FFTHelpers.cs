@@ -1,6 +1,4 @@
 ﻿using Accord.Math;
-using FreqFind.Common;
-using FreqFind.Common.Extensions;
 using FreqFind.Common.Interfaces;
 using FreqFind.Lib.Models;
 using System;
@@ -12,22 +10,22 @@ namespace FreqFind.Lib.Helpers
 {
     public static class FFTModelHelpers
     {
-        //public static IProcessorModel<float> GetDefaultFFTOptions(int samplesCount, int sampleRate)
-        //{
-        //    return new SimpleFFTModel
-        //    {
-        //        InputSamplesCount = samplesCount,
-        //        SampleRate = sampleRate
-        //    };
-        //}
-        //public static IProcessorModel<float> GetZoomDefaultFFTOptions(int samplesCount, int sampleRate)
-        //{
-        //    return new ChirpModel
-        //    {
-        //        SampleRate = sampleRate,
-        //        InputSamplesCount = samplesCount
-        //    };
-        //}
+        public static IProcessorModel<float> GetDefaultFFTOptions(int samplesCount, int sampleRate)
+        {
+            return new SimpleFFTModel
+            {
+                InputSamplesCount = samplesCount,
+                SampleRate = sampleRate
+            };
+        }
+        public static IProcessorModel<float> GetZoomDefaultFFTOptions(int samplesCount, int sampleRate)
+        {
+            return new ChirpModel
+            {
+                InputSamplesCount = samplesCount,
+                SampleRate = sampleRate
+            };
+        }
         public static LocalRange GetNextFundamental(this LocalRange previousRange)
         {
             return new LocalRange(previousRange.ZoomOptions)
@@ -58,8 +56,8 @@ namespace FreqFind.Lib.Helpers
         {
             var leftIndex = peakIndex - threshold;
             var rightIndex = peakIndex + threshold;
-            var leftThreshold = FrequencyHelpers.GetFrequency(model.InputSamplesCount / 2, leftIndex, model.SampleRate);
-            var rightThreshold = FrequencyHelpers.GetFrequency(model.InputSamplesCount / 2, rightIndex, model.SampleRate);
+            var leftThreshold = FrequencyHelpers.GetFrequency(model.InputSamplesCount, leftIndex, model.SampleRate);
+            var rightThreshold = FrequencyHelpers.GetFrequency(model.InputSamplesCount, rightIndex, model.SampleRate);
             var globalPeak = FrequencyHelpers.GetFrequency(model.InputSamplesCount, peakIndex, model.SampleRate);
 
             return new LocalRange(model.GetZoomOptions(leftThreshold, rightThreshold, globalPeak))
@@ -101,7 +99,7 @@ namespace FreqFind.Lib.Helpers
                     targetIndex = i;
                     maxValue = currentValue;
                 }
-                    
+
             }
 
             return targetIndex;

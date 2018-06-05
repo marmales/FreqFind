@@ -1,5 +1,4 @@
 ﻿using FreqFind.Common.Interfaces;
-using FreqFind.Lib.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +21,8 @@ namespace FreqFind.Lib.Helpers
             if (index >= targetLength)
             {
                 index = 0;
-                var result = OnSamplesAccumulated.BeginInvoke(aggregatedData, null, locker);
+                //var result = OnSamplesAccumulated.BeginInvoke(aggregatedData, null, locker);
+                OnSamplesAccumulated.Invoke(aggregatedData);
             }
         }
     }
@@ -35,7 +35,7 @@ namespace FreqFind.Lib.Helpers
             aggregatedData = new float[targetLength];
         }
 
-        
+
     }
 
 
