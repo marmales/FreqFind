@@ -7,12 +7,12 @@ namespace FreqFind.Lib.Helpers
 {
     public static class FFTProcessor
     {
-        public static void ChirpTransform(Complex[] input, MagnifierModel zoom, int sampleRate)
+        public static void ChirpTransform(Complex[] input, LocalRange range, int sampleRate)
         {
             var samplesLength = input.Length;
-            var NM1 = samplesLength + zoom.TargetNumberOfSamples - 1;
-            var A = Complex.Exp(new Complex(0, -2 * Math.PI * zoom.LeftThreshold / zoom.RightThreshold));
-            var W = Complex.Exp(new Complex(0, -2 * Math.PI * ((zoom.RightThreshold - zoom.LeftThreshold) / (2 * (zoom.TargetNumberOfSamples - 1)) / sampleRate)));
+            var NM1 = samplesLength + range.ZoomOptions.TargetNumberOfSamples - 1;
+            var A = Complex.Exp(new Complex(0, -2 * Math.PI * range.LeftThreshold / range.RightThreshold));
+            var W = Complex.Exp(new Complex(0, -2 * Math.PI * ((range.RightThreshold - range.LeftThreshold) / (2 * (range.ZoomOptions.TargetNumberOfSamples - 1)) / sampleRate)));
 
             var y1 = new Complex[samplesLength];
             var y2 = new Complex[samplesLength];
@@ -25,7 +25,7 @@ namespace FreqFind.Lib.Helpers
                 else
                     y1[k] = 0;
 
-                if (k < zoom.TargetNumberOfSamples)
+                if (k < range.ZoomOptions.TargetNumberOfSamples)
                     y2[k] = Complex.Pow(W, -k / 2);
                 else
                     y2[k] = Complex.Pow(W, (-Math.Pow((NM1 - k), 2)));
@@ -38,7 +38,7 @@ namespace FreqFind.Lib.Helpers
             var outvector = new Complex[y1.Length];
             Convolve(y1, y2, outvector);
 
-            for (int k = 0; k < zoom.TargetNumberOfSamples; k++)
+            for (int k = 0; k < range.ZoomOptions.TargetNumberOfSamples; k++)
                 outvector[k] *= Complex.Pow(W, Math.Pow(k, 2));
 
             //outvector = outvector.Take(zoom.NumberOfSamples).ToArray();

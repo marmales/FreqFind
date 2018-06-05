@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseDialogViewModel.cs" />
+    <Compile Include="Extensions\LinqExtension.cs" />
     <Compile Include="GlobalSettings.cs" />
     <Compile Include="RelayCommand.cs" />
     <Compile Include="Extensions\ObservableExtensions.cs" />

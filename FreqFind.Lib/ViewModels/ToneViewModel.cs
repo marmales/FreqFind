@@ -27,8 +27,18 @@ namespace FreqFind.Lib.ViewModels
         INote currentNote;
         public INote GetNote(IEnumerable<double> localPeaks)
         {
-            var avgPeak = localPeaks.Average();
-            return GetNote(avgPeak);
+            var sortedPeaks = localPeaks.OrderBy(x => x).ToArray();
+            double previousDistance = 0;
+            double distanceSum = 0;
+            for (int i = 0; i < sortedPeaks.Length; i++)
+            {
+                distanceSum += (sortedPeaks[i] - previousDistance);
+                previousDistance = sortedPeaks[i];
+            }
+
+            var avg = distanceSum / sortedPeaks.Length;
+
+            return GetNote(avg);
         }
         public INote GetNote(double[] frequencies, int sampleRate)
         {

@@ -1,5 +1,6 @@
 ﻿using Accord.Math;
 using FreqFind.Common;
+using FreqFind.Common.Extensions;
 using FreqFind.Common.Interfaces;
 using FreqFind.Lib.Helpers;
 using FreqFind.Lib.Models;
@@ -7,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 
 namespace FreqFind.Lib.ViewModels
 {
@@ -34,65 +36,38 @@ namespace FreqFind.Lib.ViewModels
             if (chirp == null)
                 return;
 
+ 
             var globalResult = InternalFFT(input);
-            chirp.GetMainProcessRange(globalResult);
+            var outputData = globalResult.GetFrequencyValues().ToList();//.ToListAsync();
 
-            var peaks = GetPeaks(GetAllModels(chirp, 2), input);
+            var rangeList = new List<LocalRange> { chirp.GetGlobalPeak(globalResult) };
+            while (rangeList.Count < 5)
+                rangeList.Add(rangeList.Last().GetNextFundamental());
+
+            var peaks = GetLocalPeaks(outputData, rangeList, chirp);
+
             OnFFTCalculated.Invoke(null, new FFTEventArgs() { LocalPeaks = peaks });
         }
-        private static IEnumerable<ChirpModel> GetAllModels(ChirpModel mainModel, int count)
+        private static IEnumerable<double> GetLocalPeaks(List<double> data, IEnumerable<LocalRange> models, ChirpModel mainModel)
         {
-            var left = mainModel;
-            var right = mainModel;
-            var models = new List<ChirpModel>() { mainModel };
-            for (int i = 0; i < count; i++)
+            foreach (var range in models)
             {
-                left = GetLocalRange(left, false);
-                right = GetLocalRange(right, true);
-                yield return left;
-                yield return right;
+                var complexResult = ChirpFFT(data, mainModel, range);
+                yield return FrequencyHelpers.GetZoomedFrequency(complexResult.GetGlobalPeakIndex(), range.LeftThreshold, range.RightThreshold, range.ZoomOptions.TargetNumberOfSamples);
             }
         }
-        private static IEnumerable<double> GetPeaks(IEnumerable<ChirpModel> models, float[] input)
-        {
-            var sortedModels = models.OrderBy(MiddleOfTheZoom);
-
-            foreach (var model in sortedModels)
-            {
-                var localProcessing = new double[model.ZoomOptions.TargetNumberOfSamples];
-                yield return ChirpFFT(input, model).GetFrequencyValues(ref localProcessing).LoudestFrequency(model.SampleRate);
-            }
-        }
-        private static double MiddleOfTheZoom(ChirpModel model)
-        {
-            var left = model.ZoomOptions.LeftThreshold;
-            var right = model.ZoomOptions.RightThreshold;
-            return left + (right - left) / 2;
-        }
-        private static ChirpModel GetLocalRange(ChirpModel model, bool rightDirection)
-        {
-            var multiplier = rightDirection ? Math.Pow(2, 1) : Math.Pow(2, -1);
-            var newLeftThreshold = model.ZoomOptions.LeftThreshold * multiplier;
-            var newRightThreshold = model.ZoomOptions.RightThreshold * multiplier;
-
-            return new ChirpModel
-            {
-                SampleRate = model.SampleRate,
-                //ZoomOptions = new MagnifierModel(newLeftThreshold, newRightThreshold)
-            };
-        }
-        private static Complex[] ChirpFFT(float[] data, ChirpModel model)
+        private static IEnumerable<Complex> ChirpFFT(List<double> data, ChirpModel model, LocalRange range)
         {
             if (model == null) return null;
 
-            var fftComplex = new Complex[data.Length]; // the FFT function requires complex format
-            for (int i = 0; i < data.Length; i++)
+            var fftComplex = new Complex[data.Count]; // the FFT function requires complex format
+            for (int i = 0; i < data.Count; i++)
             {
                 fftComplex[i] = new Complex(data[i], 0.0);// make it complex format (imaginary = 0)
             }
 
-            FFTProcessor.ChirpTransform(fftComplex, model.ZoomOptions, model.SampleRate);
-            return fftComplex.Take(model.ZoomOptions.TargetNumberOfSamples).ToArray();
+            FFTProcessor.ChirpTransform(fftComplex, range, model.SampleRate);
+            return fftComplex.Take(range.ZoomOptions.TargetNumberOfSamples).ToArray();
         }
 
         private static Complex[] InternalFFT(float[] data)

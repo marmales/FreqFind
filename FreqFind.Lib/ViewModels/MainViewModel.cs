@@ -81,7 +81,7 @@ namespace FreqFind.Lib.ViewModels
         private void PrepareInputForFFT(byte[] data)
         {
             AudioHelpers.ByteArrayTo16BITInputFormat(ref receivedData, data); //From byte[] To 16bit format
-            processor.SampleAggregator.SendSamples(
+            processor.SampleAggregator.Add16BitSamples(
                          receivedData,
                          AudioOptions.SelectedDevice.Channels.Select(x => x.Volume)); //Process with FFT when buffer will be filled - SoundCard.BufferSize
         }

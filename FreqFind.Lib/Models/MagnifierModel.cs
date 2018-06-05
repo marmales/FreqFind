@@ -9,6 +9,19 @@ namespace FreqFind.Lib.Models
         {
         }
 
+        private double distance;
+        public double FrequencyDistance //From left (frequency) treshold to right
+        {
+            get { return distance; }
+            set
+            {
+                if (distance == value) return;
+                distance = value;
+                OnPropertyChanged(nameof(FrequencyDistance));
+            }
+        }
+
+
         private double baseFreq;
         public double BaseFrequency
         {
@@ -18,31 +31,6 @@ namespace FreqFind.Lib.Models
                 if (baseFreq == value) return;
                 baseFreq = value;
                 OnPropertyChanged(nameof(BaseFrequency));
-            }
-        }
-
-
-        private double leftFrequency;
-        public double LeftThreshold // Array index
-        {
-            get { return leftFrequency; }
-            set
-            {
-                if (leftFrequency == value) return;
-                leftFrequency = value;
-                OnPropertyChanged(nameof(LeftThreshold));
-            }
-        }
-
-        private double rightFrequency;
-        public double RightThreshold //Array index
-        {
-            get { return rightFrequency; }
-            set
-            {
-                if (rightFrequency == value) return;
-                rightFrequency = value;
-                OnPropertyChanged(nameof(RightThreshold));
             }
         }
 

@@ -1,5 +1,6 @@
 ﻿using Accord.Math;
 using FreqFind.Common;
+using FreqFind.Common.Extensions;
 using FreqFind.Common.Interfaces;
 using FreqFind.Lib.Models;
 using System;
@@ -11,39 +12,62 @@ namespace FreqFind.Lib.Helpers
 {
     public static class FFTModelHelpers
     {
-        public static IProcessorModel<float> GetDefaultFFTOptions(int samplesCount, int sampleRate)
+        //public static IProcessorModel<float> GetDefaultFFTOptions(int samplesCount, int sampleRate)
+        //{
+        //    return new SimpleFFTModel
+        //    {
+        //        InputSamplesCount = samplesCount,
+        //        SampleRate = sampleRate
+        //    };
+        //}
+        //public static IProcessorModel<float> GetZoomDefaultFFTOptions(int samplesCount, int sampleRate)
+        //{
+        //    return new ChirpModel
+        //    {
+        //        SampleRate = sampleRate,
+        //        InputSamplesCount = samplesCount
+        //    };
+        //}
+        public static LocalRange GetNextFundamental(this LocalRange previousRange)
         {
-            return new SimpleFFTModel
+            return new LocalRange(previousRange.ZoomOptions)
             {
-                InputSamplesCount = samplesCount,
-                SampleRate = sampleRate
+                Peak = previousRange.Peak + previousRange.ZoomOptions.BaseFrequency,
+                LeftThreshold = previousRange.LeftThreshold + previousRange.ZoomOptions.BaseFrequency,
+                RightThreshold = previousRange.RightThreshold + previousRange.ZoomOptions.BaseFrequency
             };
         }
-        public static IProcessorModel<float> GetZoomDefaultFFTOptions(int samplesCount, int sampleRate)
+        public static LocalRange GetGlobalPeak(this IProcessorModel<float> model, Complex[] data)
         {
-            return new ChirpModel
+            var loudestIndex = data.Take(data.Length / 2).GetGlobalPeakIndex();
+
+            return model.RangeInit(loudestIndex, 10);
+        }
+        public static MagnifierModel GetZoomOptions(this IProcessorModel<float> fftModel, double leftThreshold, double rightThreshold, double globalPeak)
+        {
+            var samples = (int)((leftThreshold - rightThreshold) / ChirpModel.FREQUENCY_DIFFERENCE); // number of samples where length beetwen each sample is equal 0.1Hz
+
+            return new MagnifierModel()
             {
-                SampleRate = sampleRate,
-                InputSamplesCount = samplesCount,
-                ZoomOptions = new MagnifierModel()
+                BaseFrequency = globalPeak,//FrequencyHelpers.GetFrequency(fftModel.InputSamplesCount, globalPeak, fftModel.SampleRate);
+                TargetNumberOfSamples = Math.Max(samples, ChirpModel.MIN_CHIRP_SAMPLES),
+                FrequencyDistance = rightThreshold - leftThreshold
             };
         }
-
-        public static void GetMainProcessRange(this IProcessorModel<float> model, Complex[] data)
+        private static LocalRange RangeInit(this IProcessorModel<float> model, int peakIndex, int threshold)
         {
-            var chirpModel = model as ChirpModel;
-            if (chirpModel == null)
-                return;
+            var leftIndex = peakIndex - threshold;
+            var rightIndex = peakIndex + threshold;
+            var leftThreshold = FrequencyHelpers.GetFrequency(model.InputSamplesCount / 2, leftIndex, model.SampleRate);
+            var rightThreshold = FrequencyHelpers.GetFrequency(model.InputSamplesCount / 2, rightIndex, model.SampleRate);
+            var globalPeak = FrequencyHelpers.GetFrequency(model.InputSamplesCount, peakIndex, model.SampleRate);
 
-            var outputData = data.GetFrequencyValues();
-            var loudestIndex = outputData.ToList().IndexOf(outputData.Max());
-            chirpModel.Update(loudestIndex - 10, loudestIndex + 10);
-            chirpModel.ZoomOptions.BaseFrequency = GetHarmonyDifference(loudestIndex);
-        }
-
-        private static double GetHarmonyDifference(int loudestIndex)
-        {
-            //GlobalSettings.TemperedTones_440Hz
+            return new LocalRange(model.GetZoomOptions(leftThreshold, rightThreshold, globalPeak))
+            {
+                LeftThreshold = leftThreshold,
+                RightThreshold = rightThreshold,
+                Peak = globalPeak
+            };
         }
     }
     public static class FFTHelpers
@@ -51,7 +75,7 @@ namespace FreqFind.Lib.Helpers
         public static IEnumerable<double> GetFrequencyValues(this Complex[] fftData)
         {
             foreach (var item in fftData.Take(fftData.Length / 2))
-                yield return Math.Log10(item.Magnitude);
+                yield return 20 * Math.Log10(item.Magnitude);
         }
         public static double[] GetFrequencyValues(this Complex[] fftData, ref double[] result)
         {
@@ -64,30 +88,24 @@ namespace FreqFind.Lib.Helpers
 
             return result;
         }
-
-        public static void SendSamples(this ISampleAggregator<float> aggregator, short[] data, IEnumerable<int> channelsVolume)
+        public static int GetGlobalPeakIndex(this IEnumerable<Complex> fftData)
         {
-            var volumeList = channelsVolume.ToList();
-            if (volumeList.Count == 0)
-                throw new ArgumentException("Channels not found!");
-
-            float tmpValue = 0;
-            var maxIntValue = 32767; var minIntValue = -32768; var divisior = 32768f;
-            var maxFloatValue = maxIntValue / divisior; var minFloatValue = minIntValue / divisior;
-            for (int i = 0; i < data.Length; i += volumeList.Count)
+            int targetIndex = 0;
+            double maxValue = 20 * Math.Log10(fftData.ElementAt(0).Magnitude);
+            double currentValue = 0;
+            for (int i = 1; i < fftData.Count(); i++)
             {
-                int channelsIndex = 0;
-                tmpValue = data.Skip(i).Take(volumeList.Count).Sum(x => (volumeList[channelsIndex++] / 100f) * x);
-                if (tmpValue > maxIntValue)
-                    aggregator.AddSample(maxFloatValue);
-                else if (tmpValue < minIntValue)
-                    aggregator.AddSample(minFloatValue);
-                else
-                    aggregator.AddSample(tmpValue / divisior); //[-1;1]
-
+                currentValue = 20 * Math.Log10(fftData.ElementAt(i).Magnitude);
+                if (currentValue > maxValue)
+                {
+                    targetIndex = i;
+                    maxValue = currentValue;
+                }
+                    
             }
-        }
 
+            return targetIndex;
+        }
         public static int ReverseBits(int val)
         {
             int result = 0;

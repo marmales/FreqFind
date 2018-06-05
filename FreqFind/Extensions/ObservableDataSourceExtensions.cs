@@ -21,7 +21,7 @@ namespace FreqFind.Extensions
             var length = newValues.Length;
             for (int i = 0; i < newValues.Length; i+=20)
             {
-                var x = FrequencyHelpers.GetValue(length, i, sampleRate);
+                var x = FrequencyHelpers.GetFrequency(length, i, sampleRate);
                 source.Collection.Add(new Point { X = x, Y = newValues[i] });
             }
             source.ResumeUpdate();
