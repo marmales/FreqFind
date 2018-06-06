@@ -14,9 +14,9 @@ namespace FreqFind.Lib.Helpers
             var A = Complex.Exp(new Complex(0, -2 * Math.PI * range.LeftThreshold / range.RightThreshold));
             var W = Complex.Exp(new Complex(0, -2 * Math.PI * ((range.RightThreshold - range.LeftThreshold) / (2 * (range.ZoomOptions.TargetNumberOfSamples - 1)) / sampleRate)));
 
-            var y1 = new Complex[samplesLength];
-            var y2 = new Complex[samplesLength];
-
+            var y1 = new Complex[NM1];
+            var y2 = new Complex[NM1];
+            var outConvolve = new Complex[NM1];
 
             for (int k = 0; k < NM1 - 1; k++)
             {
@@ -32,14 +32,11 @@ namespace FreqFind.Lib.Helpers
 
             }
 
-            Transform(y1, false);
-            Transform(y2, false);
+            Convolve(y1, y2, outConvolve);
 
-            var outvector = new Complex[y1.Length];
-            Convolve(y1, y2, outvector);
-
+            //that can be improved by move scaling from Convolve to this and process only target number of samples
             for (int k = 0; k < range.ZoomOptions.TargetNumberOfSamples; k++)
-                outvector[k] *= Complex.Pow(W, Math.Pow(k, 2));
+                outConvolve[k] *= Complex.Pow(W, Math.Pow(k, 2));
 
             //outvector = outvector.Take(zoom.NumberOfSamples).ToArray();
         }
@@ -67,7 +64,7 @@ namespace FreqFind.Lib.Helpers
                 return;
             else if ((n & (n - 1)) == 0)  // Is power of 2
                 TransformRadix2(vector, inverse);
-            else  // More complicated algorithm for arbitrary sizes
+            else 
                 TransformBluestein(vector, inverse);
         }
 
@@ -138,10 +135,6 @@ namespace FreqFind.Lib.Helpers
                 if (size == n)  // Prevent overflow in 'size *= 2'
                     break;
             }
-
-            //TEST THIS SHIT
-            //for (int i = 0; i < n; i++)  // Scaling (because this FFT implementation omits it)
-            //    vector[i] /= n;
         }
 
         static void TransformBluestein(Complex[] vector, bool inverse)
@@ -151,8 +144,8 @@ namespace FreqFind.Lib.Helpers
             if (n >= 0x20000000)
                 throw new ArgumentException("Array too large");
             int m = 1;
-            while (m < n * 2 + 1)
-                m *= 2;
+            while (m < n * 2 + 1) 
+                m *= 2; 
 
             // Trignometric table
             Complex[] expTable = new Complex[n];
