@@ -38,34 +38,33 @@ namespace FreqFind.Lib.ViewModels
             var globalResult = InternalFFT(input);
             var outputData = globalResult.GetFrequencyValues().ToList();//.ToListAsync();
 
-            var rangeList = new List<LocalRange> { chirp.GetGlobalPeak(globalResult) };
+            var rangeList = new List<LocalRange> { chirp.GetGlobalPeak(outputData) };
             while (rangeList.Count < 5)
                 rangeList.Add(rangeList.Last().GetNextFundamental());
 
-            var peaks = GetLocalPeaks(outputData, rangeList, chirp).ToList();
+            var peaks = GetLocalPeaks(input, rangeList, chirp).ToList();
 
             //OnFFTCalculated.Invoke(null, new FFTEventArgs() { LocalPeaks = peaks });
         }
-        private static IEnumerable<double> GetLocalPeaks(List<double> data, IEnumerable<LocalRange> models, ChirpModel mainModel)
+        private static IEnumerable<double> GetLocalPeaks(float[] input, IEnumerable<LocalRange> models, ChirpModel mainModel)
         {
             foreach (var range in models)
             {
-                var complexResult = ChirpFFT(data, mainModel, range);
-                yield return FrequencyHelpers.GetZoomedFrequency(complexResult.GetGlobalPeakIndex(), range.LeftThreshold, range.RightThreshold, range.ZoomOptions.TargetNumberOfSamples);
+                var complexResult = ChirpFFT(input, mainModel, range);
+                yield return FrequencyHelpers.GetZoomedFrequency(complexResult.GetPeakIndex(), range.LeftThreshold, range.RightThreshold, range.ZoomOptions.TargetNumberOfSamples);
             }
         }
-        private static IEnumerable<Complex> ChirpFFT(List<double> data, ChirpModel model, LocalRange range)
+        private static IEnumerable<Complex> ChirpFFT(float[] data, ChirpModel model, LocalRange range)
         {
             if (model == null) return null;
 
-            var fftComplex = new Complex[data.Count]; // the FFT function requires complex format
-            for (int i = 0; i < data.Count; i++)
+            var fftComplex = new Complex[data.Length]; // the FFT function requires complex format
+            for (int i = 0; i < fftComplex.Length; i++)
             {
                 fftComplex[i] = new Complex(data[i], 0.0);// make it complex format (imaginary = 0)
             }
 
-            FFTProcessor.ChirpTransform(fftComplex, range, model.SampleRate);
-            return fftComplex.Take(range.ZoomOptions.TargetNumberOfSamples).ToArray();
+            return FFTProcessor.ChirpTransform(fftComplex, range, model.SampleRate);
         }
 
         private static Complex[] InternalFFT(float[] data)

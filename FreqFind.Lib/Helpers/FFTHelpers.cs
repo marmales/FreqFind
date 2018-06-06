@@ -35,9 +35,9 @@ namespace FreqFind.Lib.Helpers
                 RightThreshold = previousRange.RightThreshold + previousRange.ZoomOptions.BaseFrequency
             };
         }
-        public static LocalRange GetGlobalPeak(this IProcessorModel<float> model, Complex[] data)
+        public static LocalRange GetGlobalPeak(this IProcessorModel<float> model, List<double> data)
         {
-            var loudestIndex = data.Take(data.Length / 2).GetGlobalPeakIndex();
+            var loudestIndex = data.Take(data.Count / 2).GetPeakIndex();
 
             return model.RangeInit(loudestIndex, 10);
         }
@@ -86,23 +86,25 @@ namespace FreqFind.Lib.Helpers
 
             return result;
         }
-        public static int GetGlobalPeakIndex(this IEnumerable<Complex> fftData)
+        public static int GetPeakIndex(this IEnumerable<double> fftData)
         {
-            int targetIndex = 0;
-            double maxValue = 20 * Math.Log10(fftData.ElementAt(0).Magnitude);
-            double currentValue = 0;
-            for (int i = 1; i < fftData.Count(); i++)
+            var maxValue = fftData.ElementAt(0);
+            var targetIndex = 0;
+            int i = 0;
+            foreach (var item in fftData)
             {
-                currentValue = 20 * Math.Log10(fftData.ElementAt(i).Magnitude);
-                if (currentValue > maxValue)
+                if (item > maxValue)
                 {
+                    maxValue = item;
                     targetIndex = i;
-                    maxValue = currentValue;
                 }
-
+                i++;
             }
-
             return targetIndex;
+        }
+        public static int GetPeakIndex(this IEnumerable<Complex> fftData)
+        {
+            return fftData.Select(x => 20 * Math.Log10(x.Magnitude)).GetPeakIndex();
         }
         public static int ReverseBits(int val)
         {

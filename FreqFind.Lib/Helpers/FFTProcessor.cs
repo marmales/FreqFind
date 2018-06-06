@@ -1,5 +1,6 @@
 ﻿using FreqFind.Lib.Models;
 using System;
+using System.Collections;
 using System.Linq;
 using System.Numerics;
 
@@ -7,7 +8,7 @@ namespace FreqFind.Lib.Helpers
 {
     public static class FFTProcessor
     {
-        public static void ChirpTransform(Complex[] input, LocalRange range, int sampleRate)
+        public static IEnumerable<Complex> ChirpTransform(Complex[] input, LocalRange range, int sampleRate)
         {
             var samplesLength = input.Length;
             var NM1 = samplesLength + range.ZoomOptions.TargetNumberOfSamples - 1;
@@ -16,12 +17,11 @@ namespace FreqFind.Lib.Helpers
 
             var y1 = new Complex[NM1];
             var y2 = new Complex[NM1];
-            var outConvolve = new Complex[NM1];
 
             for (int k = 0; k < NM1 - 1; k++)
             {
                 if (k < samplesLength)
-                    y1[k] = Complex.Pow(A * Complex.Pow(W, k), k) * input[k];
+                    y1[k] = Complex.Pow(A * Complex.Pow(W, k), k) * input[k];//Okey: my input has length of 8192 and because of iterator it will exceed (NM-1 length) check whats in book
                 else
                     y1[k] = 0;
 
@@ -32,21 +32,24 @@ namespace FreqFind.Lib.Helpers
 
             }
 
-            Convolve(y1, y2, outConvolve);
+            Convolve(y1, y2);
 
             //that can be improved by move scaling from Convolve to this and process only target number of samples
             for (int k = 0; k < range.ZoomOptions.TargetNumberOfSamples; k++)
-                outConvolve[k] *= Complex.Pow(W, Math.Pow(k, 2));
+                y1[k] *= Complex.Pow(W, Math.Pow(k, 2));
 
-            //outvector = outvector.Take(zoom.NumberOfSamples).ToArray();
+            return y1.Take(range.ZoomOptions.TargetNumberOfSamples);
         }
-        static void Convolve(Complex[] xvector, Complex[] yvector, Complex[] outvector)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="xvector">This parameter represent one of the input functions and processed value at the end</param>
+        /// <param name="yvector">This parameter represent one of the input functions</param>
+        static void Convolve(Complex[] xvector, Complex[] yvector)
         {
             int n = xvector.Length;
-            if (n != yvector.Length || n != outvector.Length)
+            if (n != yvector.Length)
                 throw new ArgumentException("Mismatched lengths");
-            xvector = (Complex[])xvector.Clone();
-            yvector = (Complex[])yvector.Clone();
             Transform(xvector, false);
             Transform(yvector, false);
             for (int i = 0; i < n; i++)
@@ -54,7 +57,7 @@ namespace FreqFind.Lib.Helpers
             Transform(xvector, true);
 
             for (int i = 0; i < n; i++)  // Scaling (because this FFT implementation omits it)
-                outvector[i] = xvector[i] / n;
+                xvector[i] /= n;
         }
 
         public static void Transform(Complex[] vector, bool inverse)
@@ -166,12 +169,11 @@ namespace FreqFind.Lib.Helpers
                 bvector[i] = bvector[m - i] = Complex.Conjugate(expTable[i]);
 
             // Convolution
-            Complex[] cvector = new Complex[m];
-            Convolve(avector, bvector, cvector);
+            Convolve(avector, bvector); //avecotr will be processed vector
 
             // Postprocessing
             for (int i = 0; i < n; i++)
-                vector[i] = cvector[i] * expTable[i];
+                vector[i] = avector[i] * expTable[i];
         }
     }
 }
