@@ -92,9 +92,14 @@
         </StackPanel>
 
         <!--FREQUENCY GRAPH-->
+<<<<<<< Updated upstream
         #
         <local:FrequencyView DataContext="{Binding FFTViewModel}" 
                              Grid.Row="1" Grid.Column="1"/>
+=======
+        <!--<local:FrequencyView DataContext="{Binding FFTViewModel}" 
+                             Grid.Row="1" Grid.Column="1"/>-->
+>>>>>>> Stashed changes
 
     </Grid>
 </Window>

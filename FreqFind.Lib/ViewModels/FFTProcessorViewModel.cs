@@ -86,7 +86,10 @@ namespace FreqFind.Lib.ViewModels
             TransformedData = new List<double>();
         }
 
+<<<<<<< Updated upstream
 #if DEBUG
+=======
+>>>>>>> Stashed changes
         private List<double> transformedData = new List<double>();
         public List<double> TransformedData
         {
@@ -98,7 +101,10 @@ namespace FreqFind.Lib.ViewModels
                 OnPropertyChanged(nameof(TransformedData));
             }
         }
+<<<<<<< Updated upstream
 
 #endif
+=======
+>>>>>>> Stashed changes
     }
 }
