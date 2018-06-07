@@ -37,14 +37,17 @@ namespace FreqFind.Lib.ViewModels
 
             var globalResult = InternalFFT(input);
             var outputData = globalResult.GetFrequencyValues().ToList();//.ToListAsync();
+#if DEBUG
+            //TransformedData = outputData;
+#endif
 
             var rangeList = new List<LocalRange> { chirp.GetGlobalPeak(outputData) };
             while (rangeList.Count < 5)
                 rangeList.Add(rangeList.Last().GetNextFundamental());
 
-            var peaks = GetLocalPeaks(input, rangeList, chirp).ToList();
+            var peaks = GetLocalPeaks(input, rangeList, chirp);
 
-            //OnFFTCalculated.Invoke(null, new FFTEventArgs() { LocalPeaks = peaks });
+            OnFFTCalculated.Invoke(null, new FFTEventArgs() { LocalPeaks = peaks });
         }
         private static IEnumerable<double> GetLocalPeaks(float[] input, IEnumerable<LocalRange> models, ChirpModel mainModel)
         {
@@ -80,11 +83,12 @@ namespace FreqFind.Lib.ViewModels
         public void Cleanup()
         {
             SampleAggregator.OnSamplesAccumulated = null;
-            TransformedData = new double[1];
+            TransformedData = new List<double>();
         }
 
-
-        public double[] TransformedData // hide if tone will be implemented
+#if DEBUG
+        private List<double> transformedData = new List<double>();
+        public List<double> TransformedData
         {
             get { return transformedData; }
             set
@@ -94,7 +98,7 @@ namespace FreqFind.Lib.ViewModels
                 OnPropertyChanged(nameof(TransformedData));
             }
         }
-        double[] transformedData = new double[1];
 
+#endif
     }
 }

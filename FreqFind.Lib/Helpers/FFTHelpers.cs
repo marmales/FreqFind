@@ -43,7 +43,8 @@ namespace FreqFind.Lib.Helpers
         }
         public static MagnifierModel GetZoomOptions(this IProcessorModel<float> fftModel, double leftThreshold, double rightThreshold, double globalPeak)
         {
-            var samples = (int)((rightThreshold - leftThreshold) / ChirpModel.FREQUENCY_DIFFERENCE); // number of samples where length beetwen each sample is equal 0.1Hz
+            // number of samples where length beetwen each sample is multiple by target frequency difference(here 0.1Hz)
+            var samples = (int)((rightThreshold - leftThreshold) / ChirpModel.FREQUENCY_DIFFERENCE); 
 
             return new MagnifierModel()
             {
