@@ -28,7 +28,7 @@ namespace FreqFind.Lib.Helpers
         }
         public static LocalRange GetNextFundamental(this LocalRange previousRange)
         {
-            return new LocalRange(previousRange.ZoomOptions)
+            return new LocalRange(previousRange.ZoomOptions)//Zoom options will be the same for the all local peaks
             {
                 Peak = previousRange.Peak + previousRange.ZoomOptions.BaseFrequency,
                 LeftThreshold = previousRange.LeftThreshold + previousRange.ZoomOptions.BaseFrequency,
@@ -43,13 +43,12 @@ namespace FreqFind.Lib.Helpers
         }
         public static MagnifierModel GetZoomOptions(this IProcessorModel<float> fftModel, double leftThreshold, double rightThreshold, double globalPeak)
         {
-            var samples = (int)((leftThreshold - rightThreshold) / ChirpModel.FREQUENCY_DIFFERENCE); // number of samples where length beetwen each sample is equal 0.1Hz
+            var samples = (int)((rightThreshold - leftThreshold) / ChirpModel.FREQUENCY_DIFFERENCE); // number of samples where length beetwen each sample is equal 0.1Hz
 
             return new MagnifierModel()
             {
                 BaseFrequency = globalPeak,//FrequencyHelpers.GetFrequency(fftModel.InputSamplesCount, globalPeak, fftModel.SampleRate);
-                TargetNumberOfSamples = Math.Max(samples, ChirpModel.MIN_CHIRP_SAMPLES),
-                FrequencyDistance = rightThreshold - leftThreshold
+                TargetNumberOfSamples = Math.Max(samples, ChirpModel.MIN_CHIRP_SAMPLES)
             };
         }
         private static LocalRange RangeInit(this IProcessorModel<float> model, int peakIndex, int threshold)

@@ -7,55 +7,6 @@ using System.Collections.ObjectModel;
 
 namespace FreqFind.Lib.Models
 {
-    public class ChirpModel : FFTModel
-    {
-        public const double FREQUENCY_DIFFERENCE = 0.1; // 0.1Hz
-        public const int MAX_CHIRP_SAMPLES = 2048;
-        public const int MIN_CHIRP_SAMPLES = 128;
-        public const int DECYBELS_RANGE_DIFFERENCE = 20; //20db
-        
-        public ChirpModel()
-        {
-        }
-
-
-
-        //void init(int globalPeak, int threshold)//index
-        //{
-        //    var leftIndex = globalPeak - threshold;
-        //    var rightIndex = globalPeak + threshold;
-        //    var leftThreshold = FrequencyHelpers.GetFrequency(InputSamplesCount / 2, leftIndex, SampleRate);
-        //    var rightThreshold = FrequencyHelpers.GetFrequency(InputSamplesCount / 2, rightIndex, SampleRate);
-
-        //    var samples = (int)((leftThreshold - rightThreshold) / FREQUENCY_DIFFERENCE); // number of samples where length beetwen each sample is equal 0.1Hz
-
-        //    zoomOptions.BaseFrequency = FrequencyHelpers.GetFrequency(InputSamplesCount, globalPeak, SampleRate);
-        //    zoomOptions.TargetNumberOfSamples = Math.Max(samples, MIN_CHIRP_SAMPLES);
-        //    zoomOptions.FrequencyDistance = rightThreshold - leftThreshold;
-
-        //    Range.Add(new LocalRange()
-        //    {
-        //        LeftThreshold = leftThreshold,
-        //        RightThreshold = rightThreshold,
-        //        Peak = zoomOptions.BaseFrequency
-        //    });
-        //}
-
-        //public void AddLocal(double previousFrequency)
-        //{
-        //    var peak = previousFrequency + zoomOptions.BaseFrequency;
-        //    Range.Add(new LocalRange()
-        //    {
-        //        LeftThreshold = peak - zoomOptions.FrequencyDistance / 2,
-        //        RightThreshold = peak + zoomOptions.FrequencyDistance / 2,
-        //        Peak = peak
-        //    });
-        //}
-        //public int GetSamplesZoomCount()
-        //{
-        //    return zoomOptions.TargetNumberOfSamples;
-        //}
-    }
     public class LocalRange : Observable
     {
         public MagnifierModel ZoomOptions { get; }
@@ -98,6 +49,17 @@ namespace FreqFind.Lib.Models
                 rightFrequency = value;
                 OnPropertyChanged(nameof(RightThreshold));
             }
+        }
+    }
+    public class ChirpModel : FFTModel
+    {
+        public const double FREQUENCY_DIFFERENCE = 0.1; // 0.1Hz
+        public const int MAX_CHIRP_SAMPLES = 2048;
+        public const int MIN_CHIRP_SAMPLES = 128;
+        public const int DECYBELS_RANGE_DIFFERENCE = 20; //20db
+
+        public ChirpModel()
+        {
         }
     }
     public class SimpleFFTModel : FFTModel

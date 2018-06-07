@@ -1,6 +1,6 @@
 ﻿using FreqFind.Lib.Models;
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
@@ -21,7 +21,7 @@ namespace FreqFind.Lib.Helpers
             for (int k = 0; k < NM1 - 1; k++)
             {
                 if (k < samplesLength)
-                    y1[k] = Complex.Pow(A * Complex.Pow(W, k), k) * input[k];//Okey: my input has length of 8192 and because of iterator it will exceed (NM-1 length) check whats in book
+                    y1[k] = Complex.Pow(A * Complex.Pow(W, k), k) * input[k];
                 else
                     y1[k] = 0;
 
@@ -29,7 +29,6 @@ namespace FreqFind.Lib.Helpers
                     y2[k] = Complex.Pow(W, -k / 2);
                 else
                     y2[k] = Complex.Pow(W, (-Math.Pow((NM1 - k), 2)));
-
             }
 
             Convolve(y1, y2);

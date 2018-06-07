@@ -8,20 +8,6 @@ namespace FreqFind.Lib.Models
         public MagnifierModel()
         {
         }
-
-        private double distance;
-        public double FrequencyDistance //From left (frequency) treshold to right
-        {
-            get { return distance; }
-            set
-            {
-                if (distance == value) return;
-                distance = value;
-                OnPropertyChanged(nameof(FrequencyDistance));
-            }
-        }
-
-
         private double baseFreq;
         public double BaseFrequency
         {
