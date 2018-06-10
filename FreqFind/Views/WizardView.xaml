@@ -1,20 +1,18 @@
 ﻿<Window
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                      
-        xmlns:local="clr-namespace:FreqFind.Views"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:FreqFind.Views"
+    x:Class="FreqFind.Views.WizardView"
 
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="FreqFind.Views.WizardView"
-
-        SnapsToDevicePixels="True" WindowStartupLocation="CenterScreen"
+    SnapsToDevicePixels="True" WindowStartupLocation="CenterScreen"
                       
-        Foreground="{DynamicResource WindowText}"
-        Background="{DynamicResource WindowBackground}"    
+    Foreground="{DynamicResource WindowText}"
+    Background="{DynamicResource WindowBackground}"    
         
-        Title="Frequency Finder"
+    Title="Frequency Finder"
         
         
-        Height="670" Width="950">
+    Height="670" Width="950">
     <!--DEFAULT GRID VIEW-->
     <Grid>
         <Grid.RowDefinitions>
@@ -23,7 +21,7 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="3*"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
@@ -31,75 +29,67 @@
         <Menu Grid.Row="0" IsMainMenu="True" Grid.ColumnSpan="3">
             <MenuItem Header="File">
                 <MenuItem Header="Close"
-                              ToolTip="Close"
-                              >
+                          ToolTip="Close"
+                          >
                     <MenuItem.Icon>
                         <Viewbox Height="16" Width="16">
                             <Path Data="{StaticResource CloseGeometry}"
-                                      Fill="{DynamicResource WindowText}"/>
+                                  Fill="{DynamicResource WindowText}"/>
                         </Viewbox>
                     </MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
             <MenuItem Header="Audio">
                 <MenuItem Header="Start"
-                              ToolTip="Start recording"
-                              Command="{Binding StartCommand}"
-                              >
+                          ToolTip="Start recording"
+                          Command="{Binding StartCommand}"
+                          >
                     <MenuItem.Icon>
                         <Viewbox Height="16" Width="16">
                             <Path Data="{StaticResource PlayGeometry}"
-                                      Fill="{DynamicResource WindowText}"/>
+                                  Fill="{DynamicResource WindowText}"/>
                         </Viewbox>
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="Stop"
-                              ToolTip="Stop recording"
-                              Command="{Binding StopCommand}"
-                              >
+                          ToolTip="Stop recording"
+                          Command="{Binding StopCommand}"
+                          >
                     <MenuItem.Icon>
                         <Viewbox Height="16" Width="16">
                             <Path Data="{StaticResource PauseGeometry}"
-                                      Fill="{DynamicResource WindowText}"/>
+                                  Fill="{DynamicResource WindowText}"/>
                         </Viewbox>
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator/>
                 <MenuItem Header="Settings"
-                              ToolTip="Settings"
-                              Command="{Binding OpenAudioSettingsCommand}">
+                          ToolTip="Settings"
+                          Command="{Binding OpenAudioSettingsCommand}">
                     <MenuItem.Icon>
                         <Viewbox Height="16" Width="16">
                             <Path Data="{StaticResource SettingsGeometry}"
-                                      Fill="{DynamicResource WindowText}"/>
+                                  Fill="{DynamicResource WindowText}"/>
                         </Viewbox>
                     </MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
         </Menu>
-        <!--NOTE CONTROL-->
         <StackPanel DataContext="{Binding NoteViewModel}"
-                    Grid.Row="1" Grid.Column="0"
-                    Orientation="Horizontal" 
-                    VerticalAlignment="Center" HorizontalAlignment="Center"
-                    >
-            <TextBlock Text="{Binding CurrentNote.Tone}"
-                       TextAlignment="Center" 
-                       FontSize="30" Margin="15,0,0,0"/>
-            <TextBlock Text="{Binding CurrentNote.Base}"
-                       TextAlignment="Center"
-                       FontSize="14" Margin="0"/>
-        </StackPanel>
+             Grid.Row="1" Grid.Column="0"
+             Orientation="Horizontal" 
+             VerticalAlignment="Center" HorizontalAlignment="Center"
+             >
+             <TextBlock Text="{Binding CurrentNote.Tone}"
+             TextAlignment="Center" 
+             FontSize="30" Margin="15,0,0,0"/>
+             <TextBlock Text="{Binding CurrentNote.Base}"
+             TextAlignment="Center"
+             FontSize="14" Margin="0"/>
+             </StackPanel>
 
         <!--FREQUENCY GRAPH-->
-<<<<<<< Updated upstream
-        #
-        <local:FrequencyView DataContext="{Binding FFTViewModel}" 
-                             Grid.Row="1" Grid.Column="1"/>
-=======
         <!--<local:FrequencyView DataContext="{Binding FFTViewModel}" 
                              Grid.Row="1" Grid.Column="1"/>-->
->>>>>>> Stashed changes
-
     </Grid>
 </Window>

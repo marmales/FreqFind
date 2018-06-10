@@ -24,9 +24,11 @@ namespace FreqFind.Lib.ViewModels
             waveIn.DataAvailable += OnDataAvailable;
         }
 
+        private static object locker = new object();
         private void OnDataAvailable(object sender, WaveInEventArgs e)
         {
-            OnDataReceived.Invoke(e.Buffer);
+            OnDataReceived.BeginInvoke(e.Buffer, null, locker);
+            //OnDataReceived.Invoke(e.Buffer);
         }
 
         public void Start()

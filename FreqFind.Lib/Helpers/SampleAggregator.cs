@@ -15,15 +15,15 @@ namespace FreqFind.Lib.Helpers
 
         public Action<float[]> OnSamplesAccumulated { get; set; }
 
-        public void AddSample(float data)
+        public virtual void AddSample(float data)
         {
-            aggregatedData[index++] = data;
             if (index >= targetLength)
             {
                 index = 0;
                 //var result = OnSamplesAccumulated.BeginInvoke(aggregatedData, null, locker);
                 OnSamplesAccumulated.Invoke(aggregatedData);
             }
+            aggregatedData[index++] = data;
         }
     }
     public class SampleAggregator : SampleAggregatorBase

@@ -3,8 +3,8 @@ using FreqFind.Common.Interfaces;
 using FreqFind.Lib.Helpers;
 using FreqFind.Lib.Models;
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FreqFind.Lib.ViewModels
 {
@@ -37,7 +37,6 @@ namespace FreqFind.Lib.ViewModels
             }
 
             var avg = distanceSum / sortedPeaks.Length;
-
             return GetNote(avg);
         }
         public INote GetNote(double[] frequencies, int sampleRate)
@@ -52,6 +51,7 @@ namespace FreqFind.Lib.ViewModels
                 if (targetFrequency.IsContainedInOctave(octave))
                 {
                     LookForValue(octave, targetFrequency);
+                    OnPropertyChanged(nameof(CurrentNote));
                     return CurrentNote;
                 }
             }
@@ -73,9 +73,12 @@ namespace FreqFind.Lib.ViewModels
 
                 if (freqValue.InRange(left.Key, right.Key))
                 {
-                    CurrentNote.Base = octaveIndex;
-                    CurrentNote.Tone = freqValue.GetCloserTone(left, right);
-                    
+                    CurrentNote = new Note()
+                    {
+                        Base = octaveIndex,
+                        Tone = freqValue.GetCloserTone(left, right)
+                    };
+
                 }
                 left = right;
                 right = GlobalSettings.TemperedTones_440Hz[octaveIndex].ElementAt(j + 1);

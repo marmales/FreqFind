@@ -1,8 +1,8 @@
-﻿using Accord.Math;
-using FreqFind.Common.Interfaces;
+﻿using FreqFind.Common.Interfaces;
 using FreqFind.Lib.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 
@@ -39,12 +39,12 @@ namespace FreqFind.Lib.Helpers
         {
             var loudestIndex = data.Take(data.Count / 2).GetPeakIndex();
 
-            return model.RangeInit(loudestIndex, 10);
+            return model.RangeInit(loudestIndex, 3);
         }
         public static MagnifierModel GetZoomOptions(this IProcessorModel<float> fftModel, double leftThreshold, double rightThreshold, double globalPeak)
         {
             // number of samples where length beetwen each sample is multiple by target frequency difference(here 0.1Hz)
-            var samples = (int)((rightThreshold - leftThreshold) / ChirpModel.FREQUENCY_DIFFERENCE); 
+            var samples = (int)((rightThreshold - leftThreshold) / ChirpModel.FREQUENCY_DIFFERENCE);
 
             return new MagnifierModel()
             {

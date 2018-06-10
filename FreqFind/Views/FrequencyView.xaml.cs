@@ -37,7 +37,7 @@ namespace FreqFind.Views
                 source.SetXYMapping(x => x);
 
                 var lineGraph = fftChart.AddLineGraph(source, Color.FromRgb(0, 128, 255), 1, "Widmo");
-                
+
             }
         }
         ObservableDataSource<Point> source;
@@ -50,7 +50,7 @@ namespace FreqFind.Views
             {
                 this.Dispatcher.Invoke(() =>
                 {
-                    source.AssignFrequencyValues(vm.TransformedData, vm.Model.SampleRate);
+                    source.AssignZoomedValues(vm.TransformedData, vm.CurrentRange);
                 });
 
             }

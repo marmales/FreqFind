@@ -3,7 +3,6 @@ using FreqFind.Common.Extensions;
 using FreqFind.Common.Interfaces;
 using FreqFind.Lib.Helpers;
 using FreqFind.Lib.Models;
-using System;
 using System.Linq;
 using System.Windows.Input;
 
@@ -11,7 +10,7 @@ namespace FreqFind.Lib.ViewModels
 {
     public static class TempGlobalSettings
     {
-        
+
     }
     public class MainViewModel : BaseDialogViewModel
     {
@@ -92,6 +91,7 @@ namespace FreqFind.Lib.ViewModels
                 NoteViewModel.GetNote(e.LocalPeaks);
             else if (e.Result != null && e.Result.Length != 0)
                 NoteViewModel.GetNote(e.Result, AudioOptions.SampleRate);
+
         }
 
         #region Commands

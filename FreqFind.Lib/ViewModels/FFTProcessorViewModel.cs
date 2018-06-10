@@ -27,35 +27,46 @@ namespace FreqFind.Lib.ViewModels
                 OnSamplesAccumulated = Process
             };
         }
-
+        private void HannWindow(ref float[] input)
+        {
+            var multipier = 0d;
+            for (int i = 0; i < input.Length; i++)
+            {
+                multipier = 0.5 * (1 - Math.Cos(2 * Math.PI * i / (input.Length - 1)));
+                input[i] *= (float)multipier;
+            }
+        }
         public void Process(float[] input)
         {
             var chirp = Model as ChirpModel;
             if (chirp == null)
                 return;
-
+            HannWindow(ref input);
 
             var globalResult = InternalFFT(input);
             var outputData = globalResult.GetFrequencyValues().ToList();//.ToListAsync();
-#if DEBUG
-            //TransformedData = outputData;
-#endif
 
             var rangeList = new List<LocalRange> { chirp.GetGlobalPeak(outputData) };
-            while (rangeList.Count < 5)
+            while (rangeList.Count < 4)
                 rangeList.Add(rangeList.Last().GetNextFundamental());
 
-            var peaks = GetLocalPeaks(input, rangeList, chirp);
-
+            var peaks = GetLocalPeaks(input, rangeList, chirp).ToList();
+            //Debug.WriteLine($"{peaks.First()} {peaks.ElementAt(1)} {peaks.ElementAt(2)}");
             OnFFTCalculated.Invoke(null, new FFTEventArgs() { LocalPeaks = peaks });
         }
-        private static IEnumerable<double> GetLocalPeaks(float[] input, IEnumerable<LocalRange> models, ChirpModel mainModel)
+        private IEnumerable<double> GetLocalPeaks(float[] input, IEnumerable<LocalRange> models, ChirpModel mainModel)
         {
             foreach (var range in models)
             {
                 var complexResult = ChirpFFT(input, mainModel, range);
+                //DisplayLocalPeaks(complexResult.ToArray(), range);
                 yield return FrequencyHelpers.GetZoomedFrequency(complexResult.GetPeakIndex(), range.LeftThreshold, range.RightThreshold, range.ZoomOptions.TargetNumberOfSamples);
             }
+        }
+        void DisplayLocalPeaks(Complex[] output, LocalRange range)
+        {
+            CurrentRange = range;
+            TransformedData = output.GetFrequencyValues().ToList();
         }
         private static IEnumerable<Complex> ChirpFFT(float[] data, ChirpModel model, LocalRange range)
         {
@@ -86,10 +97,8 @@ namespace FreqFind.Lib.ViewModels
             TransformedData = new List<double>();
         }
 
-<<<<<<< Updated upstream
-#if DEBUG
-=======
->>>>>>> Stashed changes
+        public LocalRange CurrentRange { get; set; }
+
         private List<double> transformedData = new List<double>();
         public List<double> TransformedData
         {
@@ -101,10 +110,5 @@ namespace FreqFind.Lib.ViewModels
                 OnPropertyChanged(nameof(TransformedData));
             }
         }
-<<<<<<< Updated upstream
-
-#endif
-=======
->>>>>>> Stashed changes
     }
 }

@@ -12,7 +12,7 @@ namespace FreqFind.Lib.Helpers
         {
             var samplesLength = input.Length;
             var NM1 = samplesLength + range.ZoomOptions.TargetNumberOfSamples - 1;
-            var A = Complex.Exp(new Complex(0, -2 * Math.PI * range.LeftThreshold / range.RightThreshold));
+            var A = Complex.Exp(new Complex(0, -2 * Math.PI * range.LeftThreshold / sampleRate));
             var W = Complex.Exp(new Complex(0, -2 * Math.PI * ((range.RightThreshold - range.LeftThreshold) / (2 * (range.ZoomOptions.TargetNumberOfSamples - 1)) / sampleRate)));
 
             var y1 = new Complex[NM1];
@@ -26,7 +26,7 @@ namespace FreqFind.Lib.Helpers
                     y1[k] = 0;
 
                 if (k < range.ZoomOptions.TargetNumberOfSamples)
-                    y2[k] = Complex.Pow(W, -k / 2);
+                    y2[k] = Complex.Pow(W, -Math.Pow(k, 2));
                 else
                     y2[k] = Complex.Pow(W, (-Math.Pow((NM1 - k), 2)));
             }
@@ -66,7 +66,7 @@ namespace FreqFind.Lib.Helpers
                 return;
             else if ((n & (n - 1)) == 0)  // Is power of 2
                 TransformRadix2(vector, inverse);
-            else 
+            else
                 TransformBluestein(vector, inverse);
         }
 
@@ -146,8 +146,8 @@ namespace FreqFind.Lib.Helpers
             if (n >= 0x20000000)
                 throw new ArgumentException("Array too large");
             int m = 1;
-            while (m < n * 2 + 1) 
-                m *= 2; 
+            while (m < n * 2 + 1)
+                m *= 2;
 
             // Trignometric table
             Complex[] expTable = new Complex[n];
