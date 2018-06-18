@@ -7,7 +7,7 @@ namespace FreqFind.Common.Interfaces
     {
         ISampleAggregator<float> SampleAggregator { get; set; }
         IProcessorModel<float> Model { get; set; }
-        void Process(float[] data);
+        IEnumerable<double> Process(float[] data);
         event EventHandler<FFTEventArgs> OnFFTCalculated;
     }
     public interface IProcessorModel<T>

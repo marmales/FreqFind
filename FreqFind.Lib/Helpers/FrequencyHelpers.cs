@@ -13,7 +13,7 @@ namespace FreqFind.Lib.Helpers
         }
         public static double GetFrequency(int samplesCount, int index, int sampleRate)
         {
-            return (double)index / samplesCount * sampleRate; // in Hz CHECK
+            return (double)index / samplesCount * sampleRate / 2; // in Hz CHECK
         }
         public static double GetZoomedFrequency(int index, double leftThreshold, double rightThreshold, int zoomedSamples)
         {
@@ -22,7 +22,7 @@ namespace FreqFind.Lib.Helpers
         }
         public static int GetIndex(double frequency, int samplesCount, int sampleRate)
         {
-            return (int)Math.Round(frequency * samplesCount / sampleRate);
+            return (int)Math.Round(frequency * samplesCount / sampleRate); // * 2
         }
     }
 }

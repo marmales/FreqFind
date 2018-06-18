@@ -17,14 +17,14 @@ namespace FreqFind.Lib.ViewModels
 
         public FFTProcessorViewModel(IProcessorModel<float> model)
         {
-            if (this.SampleAggregator != null)
-                SampleAggregator.OnSamplesAccumulated -= Process;
+            //if (this.SampleAggregator != null)
+            //    SampleAggregator.OnSamplesAccumulated -= Process;
 
             this.Model = model;
-            this.SampleAggregator = new SampleAggregator(model.InputSamplesCount)
-            {
-                OnSamplesAccumulated = Process
-            };
+            //this.SampleAggregator = new SampleAggregator(model.InputSamplesCount)
+            //{
+            //    OnSamplesAccumulated = Process
+            //};
         }
         private void HannWindow(ref float[] input)
         {
@@ -35,23 +35,24 @@ namespace FreqFind.Lib.ViewModels
                 input[i] *= (float)multipier;
             }
         }
-        public void Process(float[] input)
+        public IEnumerable<double> Process(float[] input)
         {
             var chirp = Model as ChirpModel;
             if (chirp == null)
-                return;
-            //HannWindow(ref input);
+                return null;
+            HannWindow(ref input);
 
             var globalResult = InternalFFT(input);
             var outputData = globalResult.GetFrequencyValues().ToList();//.ToListAsync();
             TransformedData = outputData;
-            //var rangeList = outputData.PreparePeaks(Model);
+            var rangeList = outputData.PreparePeaks(Model);
 
             //var peaks = GetLocalPeaks(input, rangeList, chirp).ToList();
             //peaks.ForEach(x => Debug.Write(string.Concat(x, "\t")));
             //OnFFTCalculated.Invoke(null, new FFTEventArgs() { LocalPeaks = peaks });
             //OnFFTCalculated.Invoke(null, new FFTEventArgs() { Result = outputData });
-
+            //return peaks;
+            return null;
         }
         private IEnumerable<double> GetLocalPeaks(float[] input, IEnumerable<LocalRange> models, ChirpModel mainModel)
         {
@@ -87,8 +88,8 @@ namespace FreqFind.Lib.ViewModels
             {
                 fftComplex[i] = new Complex(data[i], 0.0);
             }
-            //FFTProcessor.Transform(fftComplex, false);
-            Accord.Math.FourierTransform.FFT(fftComplex, Accord.Math.FourierTransform.Direction.Forward);
+            FFTProcessor.Transform(fftComplex, false);
+            //Accord.Math.FourierTransform.FFT(fftComplex, Accord.Math.FourierTransform.Direction.Forward);
             //var n = data.Length;
             //for (int i = 0; i < n; i++)  // Scaling (because this FFT implementation omits it)
             //    fftComplex[i] /= n;

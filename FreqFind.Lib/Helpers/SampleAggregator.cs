@@ -67,5 +67,27 @@ namespace FreqFind.Lib.Helpers
 
             }
         }
+        public static IEnumerable<float> ConvertToFloat(this short[] data, IEnumerable<int> channelsVolume)
+        {
+            var volumeList = channelsVolume.ToList();
+            if (volumeList.Count == 0)
+                throw new ArgumentException("Channels not found!");
+
+            float tmpValue = 0;
+            var maxIntValue = 32767; var minIntValue = -32768; var divisior = 32768f;
+            var maxFloatValue = maxIntValue / divisior; var minFloatValue = minIntValue / divisior;
+            for (int i = 0; i < data.Length; i += volumeList.Count)
+            {
+                int channelsIndex = 0;
+                tmpValue = data.Skip(i).Take(volumeList.Count).Sum(x => (volumeList[channelsIndex++] / 100f) * x); // average value from all channels
+                if (tmpValue > maxIntValue)
+                    yield return maxFloatValue;
+                else if (tmpValue < minIntValue)
+                    yield return minFloatValue;
+                else
+                    yield return tmpValue / divisior; //[-1;1]
+
+            }
+        }
     }
 }

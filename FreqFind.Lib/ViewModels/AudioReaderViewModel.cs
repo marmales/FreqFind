@@ -7,7 +7,7 @@ namespace FreqFind.Lib.ViewModels
 {
     public class AudioReaderViewModel : BaseDialogViewModel, IAudioReader<byte>
     {
-        private IWaveIn waveIn;
+        public WaveIn WaveIn;
         private WaveFormat waveFormat;
 
         public AudioReaderViewModel()
@@ -16,12 +16,12 @@ namespace FreqFind.Lib.ViewModels
         public void Setup(IAudioReaderModel model)
         {
             waveFormat = new WaveFormat(model.SampleRate, model.Channels);
-            waveIn = new WaveIn()
+            WaveIn = new WaveIn()
             {
                 DeviceNumber = model.DeviceNumber,
                 WaveFormat = waveFormat
             };
-            waveIn.DataAvailable += OnDataAvailable;
+            //waveIn.DataAvailable += OnDataAvailable;
         }
 
         private static object locker = new object();
@@ -33,17 +33,17 @@ namespace FreqFind.Lib.ViewModels
 
         public void Start()
         {
-            if (waveIn == null || waveFormat == null)
+            if (WaveIn == null || waveFormat == null)
                 throw new NoSetupException();
 
             State = RecordingState.Recording;
-            waveIn.StartRecording();
+            WaveIn.StartRecording();
         }
 
         public void Stop()
         {
             State = RecordingState.Stoped;
-            waveIn.StopRecording();
+            WaveIn.StopRecording();
         }
 
 
