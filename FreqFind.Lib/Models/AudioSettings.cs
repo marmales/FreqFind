@@ -29,17 +29,5 @@ namespace FreqFind.Lib.Models
             }
         }
         int sampleRate;
-
-        public int BufferSize
-        {
-            get { return bufferSize; }
-            set
-            {
-                if (value < 0) return;
-                bufferSize = value;
-                OnPropertyChanged(nameof(BufferSize));
-            }
-        }
-        int bufferSize;
     }
 }

@@ -3,7 +3,9 @@ using FreqFind.Common.Extensions;
 using FreqFind.Common.Interfaces;
 using FreqFind.Lib.Helpers;
 using FreqFind.Lib.Models;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Windows.Input;
 
 namespace FreqFind.Lib.ViewModels
@@ -44,7 +46,7 @@ namespace FreqFind.Lib.ViewModels
         private IProcessorModel<float> fftOptions;
         public IProcessorModel<float> FFTOptions
         {
-            get { return fftOptions ?? (fftOptions = FFTModelHelpers.GetZoomDefaultFFTOptions(AudioOptions.BufferSize, AudioOptions.SampleRate)); }
+            get { return fftOptions ?? (fftOptions = FFTModelHelpers.GetZoomDefaultFFTOptions(0, AudioOptions.SampleRate)); }
             set
             {
                 if (fftOptions == value) return;
@@ -77,13 +79,27 @@ namespace FreqFind.Lib.ViewModels
             (reader as AudioReaderViewModel).WaveIn.DataAvailable += WaveIn_DataAvailable;
             reader.Start();
         }
-
+        static object locker = new object();
         private short[] receivedData = new short[1];
         private void WaveIn_DataAvailable(object sender, NAudio.Wave.WaveInEventArgs e)
         {
+            List<double> result = new List<double>();
             AudioHelpers.ByteArrayTo16BITInputFormat(ref receivedData, e.Buffer);
-            var result = processor.Process(receivedData.ConvertToFloat(AudioOptions.SelectedDevice.Channels.Select(x => x.Volume)).ToArray());
-            //NoteViewModel.GetNote(result);
+            var input = receivedData.ConvertToFloat(AudioOptions.SelectedDevice.Channels.Select(x => x.Volume)).ToArray();
+            if (processor.Model.InputSamplesCount != input.Length)
+                processor.Model.InputSamplesCount = input.Length;
+            (new Thread(() =>
+            {
+                result = processor.Process(input).ToList();
+            })).Start();
+
+
+            lock (locker)
+            {
+                NoteViewModel.GetNote(result);
+
+            }
+
         }
 
         //private void PrepareInputForFFT(byte[] data)

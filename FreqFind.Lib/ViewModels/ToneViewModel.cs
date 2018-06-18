@@ -27,6 +27,8 @@ namespace FreqFind.Lib.ViewModels
         INote currentNote;
         public INote GetNote(IEnumerable<double> localPeaks)
         {
+            if (localPeaks.Count() == 0)
+                return null;
             var distances = GetMostFrequentDistances(localPeaks);
             if (distances.Count() == 0)
                 return null;

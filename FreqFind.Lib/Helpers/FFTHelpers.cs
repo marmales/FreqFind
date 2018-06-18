@@ -62,9 +62,9 @@ namespace FreqFind.Lib.Helpers
         {
             var leftIndex = peakIndex - threshold;
             var rightIndex = peakIndex + threshold;
-            var leftThreshold = FrequencyHelpers.GetFrequency(model.InputSamplesCount, leftIndex, model.SampleRate);
-            var rightThreshold = FrequencyHelpers.GetFrequency(model.InputSamplesCount, rightIndex, model.SampleRate);
-            var peak = FrequencyHelpers.GetFrequency(model.InputSamplesCount, peakIndex, model.SampleRate);
+            var leftThreshold = FrequencyHelpers.GetFrequency(model.InputSamplesCount, leftIndex, model.SampleRate) * 2;
+            var rightThreshold = FrequencyHelpers.GetFrequency(model.InputSamplesCount, rightIndex, model.SampleRate) * 2;
+            var peak = FrequencyHelpers.GetFrequency(model.InputSamplesCount, peakIndex, model.SampleRate) * 2;
 
             return new LocalRange(GetZoomOptions(leftThreshold, rightThreshold, peak))
             {

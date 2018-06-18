@@ -29,7 +29,6 @@ namespace FreqFind.Lib.Helpers
         {
             return new AudioSettings()
             {
-                BufferSize = 8192,
                 SampleRate = 44100,
                 SelectedDevice = SettingsViewModel.GetDevices().FirstOrDefault()
             };

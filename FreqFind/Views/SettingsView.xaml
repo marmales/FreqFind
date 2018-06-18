@@ -76,13 +76,13 @@
                 VerticalAlignment="Top"/>
 
 
-        <TextBlock Text="Target buffer size"
+        <!--<TextBlock Text="Target buffer size"
                    Margin="10" Grid.Row="5" Grid.Column="0"
                    VerticalAlignment="Center" HorizontalAlignment="Left"/>
         <ComboBox   SelectedItem="{Binding Settings.BufferSize}"
                     ItemsSource="{Binding BufferSizeList}"
                     Margin="10" Grid.Row="5" Grid.Column="1"
-                    VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+                    VerticalAlignment="Center" HorizontalAlignment="Stretch"/>-->
 
         <Button Content="Close" IsCancel="True"
                 Margin="10" Padding="15,5" Grid.Row="6" Grid.Column="1" 
