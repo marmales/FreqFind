@@ -2,7 +2,6 @@
 using FreqFind.Lib.Models;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 
@@ -10,14 +9,6 @@ namespace FreqFind.Lib.Helpers
 {
     public static class FFTModelHelpers
     {
-        public static IProcessorModel<float> GetDefaultFFTOptions(int samplesCount, int sampleRate)
-        {
-            return new SimpleFFTModel
-            {
-                InputSamplesCount = samplesCount,
-                SampleRate = sampleRate
-            };
-        }
         public static IProcessorModel<float> GetZoomDefaultFFTOptions(int samplesCount, int sampleRate)
         {
             return new ChirpModel
@@ -26,31 +17,46 @@ namespace FreqFind.Lib.Helpers
                 SampleRate = sampleRate
             };
         }
-        public static LocalRange GetNextFundamental(this LocalRange previousRange)
-        {
-            return new LocalRange(previousRange.ZoomOptions)//Zoom options will be the same for the all local peaks
-            {
-                Peak = previousRange.Peak + previousRange.ZoomOptions.BaseFrequency,
-                LeftThreshold = previousRange.LeftThreshold + previousRange.ZoomOptions.BaseFrequency,
-                RightThreshold = previousRange.RightThreshold + previousRange.ZoomOptions.BaseFrequency
-            };
-        }
-        public static LocalRange GetGlobalPeak(this IProcessorModel<float> model, List<double> data)
-        {
-            var loudestIndex = data.Take(data.Count / 2).GetPeakIndex();
 
-            return model.RangeInit(loudestIndex, 3);
-        }
-        public static MagnifierModel GetZoomOptions(this IProcessorModel<float> fftModel, double leftThreshold, double rightThreshold, double globalPeak)
+        static object locker = new object();
+        const int MAX_PEAKS = 5;
+        const double CONSIDERED_VOLUME = -66;
+        const int NEIGHBOURS_COUNT = 5;
+        const int VOLUME_DIFFERENCE = 20;
+        public static IEnumerable<LocalRange> PreparePeaks(this List<double> data, IProcessorModel<float> model)
         {
-            // number of samples where length beetwen each sample is multiple by target frequency difference(here 0.1Hz)
-            var samples = (int)((rightThreshold - leftThreshold) / ChirpModel.FREQUENCY_DIFFERENCE);
-
-            return new MagnifierModel()
+            lock (locker)
             {
-                BaseFrequency = globalPeak,//FrequencyHelpers.GetFrequency(fftModel.InputSamplesCount, globalPeak, fftModel.SampleRate);
-                TargetNumberOfSamples = Math.Max(samples, ChirpModel.MIN_CHIRP_SAMPLES)
-            };
+                var dataLength = data.Count;
+                for (int sampleLocation = NEIGHBOURS_COUNT; sampleLocation < data.Count - NEIGHBOURS_COUNT; sampleLocation++)
+                {
+                    if (data[sampleLocation] < CONSIDERED_VOLUME)
+                        continue;
+
+                    var isPeak = true;
+                    for (int sampleMove = 0; sampleMove < NEIGHBOURS_COUNT; sampleMove++)
+                    {
+                        //left
+                        var leftNeighbour = sampleLocation - sampleMove;
+                        if (data[leftNeighbour] < data[leftNeighbour - 1]) //data is represent with negative number
+                        {
+                            isPeak = false;
+                            break;
+                        }
+                        //right
+                        var rightNeighbour = sampleLocation + sampleMove;
+                        if (data[rightNeighbour] < data[rightNeighbour + 1])
+                        {
+                            isPeak = false;
+                            break;
+                        }
+                    }
+                    if (isPeak)
+                    {
+                        yield return model.RangeInit(sampleLocation, NEIGHBOURS_COUNT);
+                    }
+                }
+            }
         }
         private static LocalRange RangeInit(this IProcessorModel<float> model, int peakIndex, int threshold)
         {
@@ -58,13 +64,24 @@ namespace FreqFind.Lib.Helpers
             var rightIndex = peakIndex + threshold;
             var leftThreshold = FrequencyHelpers.GetFrequency(model.InputSamplesCount, leftIndex, model.SampleRate);
             var rightThreshold = FrequencyHelpers.GetFrequency(model.InputSamplesCount, rightIndex, model.SampleRate);
-            var globalPeak = FrequencyHelpers.GetFrequency(model.InputSamplesCount, peakIndex, model.SampleRate);
+            var peak = FrequencyHelpers.GetFrequency(model.InputSamplesCount, peakIndex, model.SampleRate);
 
-            return new LocalRange(model.GetZoomOptions(leftThreshold, rightThreshold, globalPeak))
+            return new LocalRange(GetZoomOptions(leftThreshold, rightThreshold, peak))
             {
                 LeftThreshold = leftThreshold,
                 RightThreshold = rightThreshold,
-                Peak = globalPeak
+                Peak = peak
+            };
+        }
+        private static MagnifierModel GetZoomOptions(double leftThreshold, double rightThreshold, double peak)
+        {
+            // number of samples where length beetwen each sample is multiple by target frequency difference(here 0.1Hz)
+            var samples = (int)((rightThreshold - leftThreshold) / ChirpModel.FREQUENCY_DIFFERENCE);
+
+            return new MagnifierModel()
+            {
+                BaseFrequency = peak,//FrequencyHelpers.GetFrequency(fftModel.InputSamplesCount, globalPeak, fftModel.SampleRate);
+                TargetNumberOfSamples = Math.Max(samples, ChirpModel.MIN_CHIRP_SAMPLES)
             };
         }
     }

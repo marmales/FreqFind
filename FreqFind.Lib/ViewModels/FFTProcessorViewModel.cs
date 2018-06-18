@@ -1,5 +1,4 @@
-﻿using Accord.Math;
-using FreqFind.Common;
+﻿using FreqFind.Common;
 using FreqFind.Common.Interfaces;
 using FreqFind.Lib.Helpers;
 using FreqFind.Lib.Models;
@@ -41,18 +40,18 @@ namespace FreqFind.Lib.ViewModels
             var chirp = Model as ChirpModel;
             if (chirp == null)
                 return;
-            HannWindow(ref input);
+            //HannWindow(ref input);
 
             var globalResult = InternalFFT(input);
             var outputData = globalResult.GetFrequencyValues().ToList();//.ToListAsync();
+            TransformedData = outputData;
+            //var rangeList = outputData.PreparePeaks(Model);
 
-            var rangeList = new List<LocalRange> { chirp.GetGlobalPeak(outputData) };
-            while (rangeList.Count < 4)
-                rangeList.Add(rangeList.Last().GetNextFundamental());
+            //var peaks = GetLocalPeaks(input, rangeList, chirp).ToList();
+            //peaks.ForEach(x => Debug.Write(string.Concat(x, "\t")));
+            //OnFFTCalculated.Invoke(null, new FFTEventArgs() { LocalPeaks = peaks });
+            //OnFFTCalculated.Invoke(null, new FFTEventArgs() { Result = outputData });
 
-            var peaks = GetLocalPeaks(input, rangeList, chirp).ToList();
-            //Debug.WriteLine($"{peaks.First()} {peaks.ElementAt(1)} {peaks.ElementAt(2)}");
-            OnFFTCalculated.Invoke(null, new FFTEventArgs() { LocalPeaks = peaks });
         }
         private IEnumerable<double> GetLocalPeaks(float[] input, IEnumerable<LocalRange> models, ChirpModel mainModel)
         {
@@ -88,7 +87,12 @@ namespace FreqFind.Lib.ViewModels
             {
                 fftComplex[i] = new Complex(data[i], 0.0);
             }
-            FFTProcessor.Transform(fftComplex, false);
+            //FFTProcessor.Transform(fftComplex, false);
+            Accord.Math.FourierTransform.FFT(fftComplex, Accord.Math.FourierTransform.Direction.Forward);
+            //var n = data.Length;
+            //for (int i = 0; i < n; i++)  // Scaling (because this FFT implementation omits it)
+            //    fftComplex[i] /= n;
+
             return fftComplex;
         }
         public void Cleanup()

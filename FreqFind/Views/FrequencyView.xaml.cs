@@ -50,7 +50,8 @@ namespace FreqFind.Views
             {
                 this.Dispatcher.Invoke(() =>
                 {
-                    source.AssignZoomedValues(vm.TransformedData, vm.CurrentRange);
+                    source.AssignFrequencyValues(vm.TransformedData, vm.Model.InputSamplesCount);
+                    //source.AssignZoomedValues(vm.TransformedData, vm.CurrentRange);
                 });
 
             }

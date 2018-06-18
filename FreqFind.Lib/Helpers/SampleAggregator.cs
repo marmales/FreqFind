@@ -17,13 +17,16 @@ namespace FreqFind.Lib.Helpers
 
         public virtual void AddSample(float data)
         {
-            if (index >= targetLength)
+            lock(locker)
             {
-                index = 0;
-                //var result = OnSamplesAccumulated.BeginInvoke(aggregatedData, null, locker);
-                OnSamplesAccumulated.Invoke(aggregatedData);
+                if (index >= targetLength)
+                {
+                    index = 0;
+                    //var result = OnSamplesAccumulated.BeginInvoke(aggregatedData, null, locker);
+                    OnSamplesAccumulated.Invoke(aggregatedData);
+                }
+                aggregatedData[index++] = data;
             }
-            aggregatedData[index++] = data;
         }
     }
     public class SampleAggregator : SampleAggregatorBase

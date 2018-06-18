@@ -27,22 +27,55 @@ namespace FreqFind.Lib.ViewModels
         INote currentNote;
         public INote GetNote(IEnumerable<double> localPeaks)
         {
-            var sortedPeaks = localPeaks.OrderBy(x => x).ToArray();
-            double previousDistance = 0;
-            double distanceSum = 0;
-            for (int i = 0; i < sortedPeaks.Length; i++)
-            {
-                distanceSum += (sortedPeaks[i] - previousDistance);
-                previousDistance = sortedPeaks[i];
-            }
-
-            var avg = distanceSum / sortedPeaks.Length;
-            return GetNote(avg);
+            var distances = GetMostFrequentDistances(localPeaks);
+            if (distances.Count() == 0)
+                return null;
+            return GetNote(distances.Average());
         }
         public INote GetNote(double[] frequencies, int sampleRate)
         {
             var freqValue = frequencies.LoudestFrequency(sampleRate) * 1000;
             return GetNote(freqValue);
+        }
+        public IEnumerable<double> GetMostFrequentDistances(IEnumerable<double> peaks)
+        {
+            var threshold = 10;//Hz
+            var sortedPeaks = peaks.OrderBy(x => x).ToList();
+            var dict = new List<Tuple<double, int>>();
+            var distances = GetDistances(sortedPeaks);
+            var countList = new List<int>();
+            distances.ForEach(x => countList.Add(0));
+
+            for (int i = 0; i < distances.Count; i++)
+            {
+                for (int j = 0; j < dict.Count; j++)
+                {
+                    var tmpDistance = distances[j];
+                    if (tmpDistance + threshold < distances[i] && tmpDistance - threshold > distances[i])
+                        countList[i]++;
+                }
+            }
+            if (countList.Count == 0)
+                yield break;
+            var max = countList.Max();
+            for (int i = 0; i < countList.Count; i++)
+            {
+                if (countList[i] == max)
+                    yield return distances[i];
+            }
+
+        }
+
+        private List<double> GetDistances(List<double> sortedPeaks)
+        {
+            var distances = new List<double>();
+            var previousPeak = sortedPeaks.ElementAt(0);
+            foreach (var peak in sortedPeaks.Skip(1))
+            {
+                distances.Add(peak - previousPeak);
+                previousPeak = peak;
+            }
+            return distances;
         }
         private INote GetNote(double targetFrequency)
         {
