@@ -29,10 +29,15 @@ namespace FreqFind.Lib.ViewModels
         {
             if (localPeaks.Count() == 0)
                 return null;
-            var distances = GetMostFrequentDistances(localPeaks);
-            if (distances.Count() == 0)
-                return null;
-            return GetNote(distances.Average());
+            else if (localPeaks.Count() == 1)
+                return GetNote(localPeaks.ElementAt(0));
+            else
+            {
+                var distances = GetMostFrequentDistances(localPeaks);
+                if (distances.Count() == 0)
+                    return null;
+                return GetNote(distances.Average());
+            }
         }
         public INote GetNote(double[] frequencies, int sampleRate)
         {

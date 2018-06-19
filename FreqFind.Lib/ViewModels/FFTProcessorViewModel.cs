@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 
 namespace FreqFind.Lib.ViewModels
 {
@@ -48,6 +49,9 @@ namespace FreqFind.Lib.ViewModels
             var rangeList = outputData.PreparePeaks(Model);
 
             var peaks = GetLocalPeaks(input, rangeList, chirp);
+
+            if (rangeList.Count() == 0)
+                return GetLocalPeaks(input, new List<LocalRange>() { chirp.RangeInit(outputData.IndexOf(outputData.Max()), 3) }, chirp);
             //peaks.ForEach(x => Debug.Write(string.Concat(x, "\t")));
             //OnFFTCalculated.Invoke(null, new FFTEventArgs() { LocalPeaks = peaks });
             //OnFFTCalculated.Invoke(null, new FFTEventArgs() { Result = outputData });
@@ -55,12 +59,13 @@ namespace FreqFind.Lib.ViewModels
         }
         private IEnumerable<double> GetLocalPeaks(float[] input, IEnumerable<LocalRange> models, ChirpModel mainModel)
         {
-            foreach (var range in models)
+            var peaks = new List<double>();
+            Parallel.ForEach<LocalRange>(models, x =>
             {
-                var complexResult = ChirpFFT(input, mainModel, range);
-                //DisplayLocalPeaks(complexResult.ToArray(), range);
-                yield return FrequencyHelpers.GetZoomedFrequency(complexResult.GetPeakIndex(), range.LeftThreshold, range.RightThreshold, range.ZoomOptions.TargetNumberOfSamples);
-            }
+                var complexResult = ChirpFFT(input, mainModel, x);
+                peaks.Add(FrequencyHelpers.GetZoomedFrequency(complexResult.GetPeakIndex(), x.LeftThreshold, x.RightThreshold, x.ZoomOptions.TargetNumberOfSamples));
+            });
+            return peaks;
         }
         void DisplayLocalPeaks(Complex[] output, LocalRange range)
         {

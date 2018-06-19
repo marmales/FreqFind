@@ -21,44 +21,41 @@ namespace FreqFind.Lib.Helpers
         static object locker = new object();
         const int MAX_PEAKS = 5;
         const double CONSIDERED_VOLUME = -66;
-        const int NEIGHBOURS_COUNT = 5;
+        const int NEIGHBOURS_COUNT = 3;
         const int VOLUME_DIFFERENCE = 20;
         public static IEnumerable<LocalRange> PreparePeaks(this List<double> data, IProcessorModel<float> model)
         {
-            lock (locker)
+            var dataLength = data.Count;
+            for (int sampleLocation = NEIGHBOURS_COUNT; sampleLocation < data.Count - NEIGHBOURS_COUNT; sampleLocation++)
             {
-                var dataLength = data.Count;
-                for (int sampleLocation = NEIGHBOURS_COUNT; sampleLocation < data.Count - NEIGHBOURS_COUNT; sampleLocation++)
-                {
-                    if (data[sampleLocation] < CONSIDERED_VOLUME)
-                        continue;
+                if (data[sampleLocation] < CONSIDERED_VOLUME)
+                    continue;
 
-                    var isPeak = true;
-                    for (int sampleMove = 0; sampleMove < NEIGHBOURS_COUNT; sampleMove++)
+                var isPeak = true;
+                for (int sampleMove = 0; sampleMove < NEIGHBOURS_COUNT; sampleMove++)
+                {
+                    //left
+                    var leftNeighbour = sampleLocation - sampleMove;
+                    if (data[leftNeighbour] < data[leftNeighbour - 1]) //data is represent with negative number
                     {
-                        //left
-                        var leftNeighbour = sampleLocation - sampleMove;
-                        if (data[leftNeighbour] < data[leftNeighbour - 1]) //data is represent with negative number
-                        {
-                            isPeak = false;
-                            break;
-                        }
-                        //right
-                        var rightNeighbour = sampleLocation + sampleMove;
-                        if (data[rightNeighbour] < data[rightNeighbour + 1])
-                        {
-                            isPeak = false;
-                            break;
-                        }
+                        isPeak = false;
+                        break;
                     }
-                    if (isPeak)
+                    //right
+                    var rightNeighbour = sampleLocation + sampleMove;
+                    if (data[rightNeighbour] < data[rightNeighbour + 1])
                     {
-                        yield return model.RangeInit(sampleLocation, NEIGHBOURS_COUNT);
+                        isPeak = false;
+                        break;
                     }
+                }
+                if (isPeak)
+                {
+                    yield return model.RangeInit(sampleLocation, NEIGHBOURS_COUNT);
                 }
             }
         }
-        private static LocalRange RangeInit(this IProcessorModel<float> model, int peakIndex, int threshold)
+        public static LocalRange RangeInit(this IProcessorModel<float> model, int peakIndex, int threshold)
         {
             var leftIndex = peakIndex - threshold;
             var rightIndex = peakIndex + threshold;

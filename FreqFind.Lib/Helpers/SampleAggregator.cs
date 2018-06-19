@@ -17,7 +17,7 @@ namespace FreqFind.Lib.Helpers
 
         public virtual void AddSample(float data)
         {
-            lock(locker)
+            lock (locker)
             {
                 if (index >= targetLength)
                 {

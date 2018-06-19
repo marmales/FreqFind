@@ -4,6 +4,7 @@ using FreqFind.Common.Interfaces;
 using FreqFind.Lib.Helpers;
 using FreqFind.Lib.Models;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Windows.Input;
@@ -83,23 +84,25 @@ namespace FreqFind.Lib.ViewModels
         private short[] receivedData = new short[1];
         private void WaveIn_DataAvailable(object sender, NAudio.Wave.WaveInEventArgs e)
         {
-            List<double> result = new List<double>();
+            var sw = new Stopwatch();
+            sw.Start();
             AudioHelpers.ByteArrayTo16BITInputFormat(ref receivedData, e.Buffer);
             var input = receivedData.ConvertToFloat(AudioOptions.SelectedDevice.Channels.Select(x => x.Volume)).ToArray();
-            if (processor.Model.InputSamplesCount != input.Length)
-                processor.Model.InputSamplesCount = input.Length;
+            sw.Stop();
+            Debug.WriteLine(string.Format("FIRST {0}", sw.Elapsed));
             (new Thread(() =>
             {
+                var sw2 = new Stopwatch();
+                sw2.Start();
+                List<double> result = new List<double>();
+                if (processor.Model.InputSamplesCount != input.Length)
+                    processor.Model.InputSamplesCount = input.Length;
+
                 result = processor.Process(input).ToList();
+                var note = NoteViewModel.GetNote(result);
+                sw2.Stop();
+                Debug.WriteLine(string.Format("SECOND {0}", sw2.Elapsed));
             })).Start();
-
-
-            lock (locker)
-            {
-                NoteViewModel.GetNote(result);
-
-            }
-
         }
 
         //private void PrepareInputForFFT(byte[] data)
