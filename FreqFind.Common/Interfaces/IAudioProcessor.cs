@@ -5,10 +5,8 @@ namespace FreqFind.Common.Interfaces
 {
     public interface IAudioProcessor : ICleanup
     {
-        ISampleAggregator<float> SampleAggregator { get; set; }
         IProcessorModel<float> Model { get; set; }
         IEnumerable<double> Process(float[] data);
-        event EventHandler<FFTEventArgs> OnFFTCalculated;
     }
     public interface IProcessorModel<T>
     {

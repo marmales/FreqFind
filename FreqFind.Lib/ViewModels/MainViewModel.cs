@@ -3,7 +3,6 @@ using FreqFind.Common.Extensions;
 using FreqFind.Common.Interfaces;
 using FreqFind.Lib.Helpers;
 using FreqFind.Lib.Models;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -63,16 +62,13 @@ namespace FreqFind.Lib.ViewModels
             if (processor != null)
             {
                 processor.Cleanup();
-                //processor.OnFFTCalculated -= AssignCalculatedData;
             }
             processor = new FFTProcessorViewModel(FFTOptions);
-            //processor.OnFFTCalculated += AssignCalculatedData;
             OnPropertyChanged(nameof(FFTViewModel));
 
             if (reader == null)
             {
                 reader = new AudioReaderViewModel();
-                //reader.OnDataReceived = PrepareInputForFFT;
             }
 
             reader.Setup(GetReaderModel());
@@ -80,47 +76,26 @@ namespace FreqFind.Lib.ViewModels
             (reader as AudioReaderViewModel).WaveIn.DataAvailable += WaveIn_DataAvailable;
             reader.Start();
         }
-        static object locker = new object();
+
         private short[] receivedData = new short[1];
         private void WaveIn_DataAvailable(object sender, NAudio.Wave.WaveInEventArgs e)
         {
-            var sw = new Stopwatch();
-            sw.Start();
-            AudioHelpers.ByteArrayTo16BITInputFormat(ref receivedData, e.Buffer);
-            var input = receivedData.ConvertToFloat(AudioOptions.SelectedDevice.Channels.Select(x => x.Volume)).ToArray();
-            sw.Stop();
-            Debug.WriteLine(string.Format("FIRST {0}", sw.Elapsed));
             (new Thread(() =>
             {
-                var sw2 = new Stopwatch();
-                sw2.Start();
-                List<double> result = new List<double>();
-                if (processor.Model.InputSamplesCount != input.Length)
-                    processor.Model.InputSamplesCount = input.Length;
+                var sw = new Stopwatch();
+                sw.Start();
+                AudioHelpers.ByteArrayTo16BITInputFormat(ref receivedData, e.Buffer);
+                var input = receivedData.Convert2ChannelsToFloat();
 
-                result = processor.Process(input).ToList();
+                if (processor.Model.InputSamplesCount != input.Count())
+                    processor.Model.InputSamplesCount = input.Count();
+
+                var result = processor.Process(input.ToArray());
                 var note = NoteViewModel.GetNote(result);
-                sw2.Stop();
-                Debug.WriteLine(string.Format("SECOND {0}", sw2.Elapsed));
+                sw.Stop();
+                Debug.WriteLine(string.Format("Note {0}\tTime elapsed {1}", string.Format(note.Tone.ToString(), note.Base), sw.Elapsed));
             })).Start();
         }
-
-        //private void PrepareInputForFFT(byte[] data)
-        //{
-        //    AudioHelpers.ByteArrayTo16BITInputFormat(ref receivedData, data); //From byte[] To 16bit format
-        //    processor.SampleAggregator.Add16BitSamples(
-        //                 receivedData,
-        //                 AudioOptions.SelectedDevice.Channels.Select(x => x.Volume)); //Process with FFT when buffer will be filled - SoundCard.BufferSize
-        //}
-
-        //public void AssignCalculatedData(object sender, FFTEventArgs e)
-        //{
-        //    if (e.LocalPeaks != null && e.LocalPeaks.Count() != 0)
-        //        NoteViewModel.GetNote(e.LocalPeaks);
-        //    else if (e.Result != null && e.Result.Length != 0)
-        //        NoteViewModel.GetNote(e.Result, AudioOptions.SampleRate);
-
-        //}
 
         #region Commands
         public ICommand StartCommand

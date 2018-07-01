@@ -37,8 +37,6 @@ namespace FreqFind.Common.Extensions
 
         public static FrameworkElement ResolveView(Observable viewModel, bool fromFallback = false, bool skipViewModelPart = false, bool onlyWindows = false)
         {
-            var start = DateTime.Now;
-
             var viewModelType = viewModel.GetType();
             var currentBaseType = viewModelType;
             var resolvedType = default(Type);
@@ -54,12 +52,6 @@ namespace FreqFind.Common.Extensions
                         break;
                 }
                 if (viewModelBaseTypes.Count == 0) return null;
-
-
-                //foreach (var item in AppDomain.CurrentDomain.GetAssemblies())
-                //{
-                //    Debug.WriteLine(item.FullName);
-                //}
                 var uiAssemblies = AppDomain.CurrentDomain.GetAssemblies()
                     .ToList();
                 if (uiAssemblies.Count != assemblyViewTypes.Keys.Count)
@@ -81,7 +73,6 @@ namespace FreqFind.Common.Extensions
                             candidates.Add(type);
                     }
                 }
-
                 if (onlyWindows)
                 {
                     var windowType = typeof(Window);
@@ -96,9 +87,6 @@ namespace FreqFind.Common.Extensions
                         return ResolveView(viewModel, true, skipViewModelPart, onlyWindows);
                     }
                 }
-
-
-
                 var idealCandidateTypeName = viewModelType.Name.Replace("Model", "");
                 var idealCandidate = candidates.Where(x => string.Equals(x.Name, idealCandidateTypeName)).FirstOrDefault();
                 resolvedType = idealCandidate ?? candidates.FirstOrDefault();
@@ -107,18 +95,11 @@ namespace FreqFind.Common.Extensions
                     resolvedTypes[viewModelType] = resolvedType;
                 }
             }
-
-            if (resolvedType == null)
-            {
-                Debug.Print("Unable to find view for " + viewModelType.Name);
+            if (resolvedType == null) //Debug.Print("Unable to find view for " + viewModelType.Name);
                 return null;
-            }
-
 
             var instance = (FrameworkElement)StaticReflection.FastCreateInstance(resolvedType);
             instance.DataContext = viewModel;
-
-            Debug.Print("Resolved " + resolvedType.Name + " for " + viewModelType.Name + " in " + (DateTime.Now - start).TotalMilliseconds + " ms");
             return instance;
         }
         static Type frameworkElementType = typeof(FrameworkElement);

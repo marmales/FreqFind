@@ -67,6 +67,23 @@ namespace FreqFind.Lib.Helpers
 
             }
         }
+        public static IEnumerable<float> Convert2ChannelsToFloat(this short[] data)
+        {
+            float tmpValue = 0;
+            var maxIntValue = 32767; var minIntValue = -32768; var divisior = 32768f;
+            var maxFloatValue = maxIntValue / divisior; var minFloatValue = minIntValue / divisior;
+            for (int i = 0; i < data.Length; i += 2)
+            {
+                tmpValue = data[i] * 0.5f + data[i + 1] * 0.5f;
+                if (tmpValue > maxIntValue)
+                    yield return maxFloatValue;
+                else if (tmpValue < minIntValue)
+                    yield return minFloatValue;
+                else
+                    yield return tmpValue / divisior; //[-1;1]
+
+            }
+        }
         public static IEnumerable<float> ConvertToFloat(this short[] data, IEnumerable<int> channelsVolume)
         {
             var volumeList = channelsVolume.ToList();

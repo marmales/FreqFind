@@ -46,15 +46,15 @@ namespace FreqFind.Views
             var vm = sender as FFTProcessorViewModel;
             if (vm == null) return;
 
-            if (string.Equals(e.PropertyName, nameof(FFTProcessorViewModel.TransformedData)))
-            {
-                this.Dispatcher.Invoke(() =>
-                {
-                    source.AssignFrequencyValues(vm.TransformedData, vm.Model.SampleRate);
-                    //source.AssignZoomedValues(vm.TransformedData, vm.CurrentRange);
-                });
+            //if (string.Equals(e.PropertyName, nameof(FFTProcessorViewModel.TransformedData)))
+            //{
+            //    this.Dispatcher.Invoke(() =>
+            //    {
+            //        source.AssignFrequencyValues(vm.TransformedData, vm.Model.SampleRate);
+            //        //source.AssignZoomedValues(vm.TransformedData, vm.CurrentRange);
+            //    });
 
-            }
+            //}
         }
     }
 }

@@ -21,7 +21,7 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
@@ -82,14 +82,14 @@
              >
              <TextBlock Text="{Binding CurrentNote.Tone}"
              TextAlignment="Center" 
-             FontSize="30" Margin="15,0,0,0"/>
+             FontSize="30" Margin="0"/>
              <TextBlock Text="{Binding CurrentNote.Base}"
              TextAlignment="Center"
-             FontSize="14" Margin="0"/>
+             FontSize="14" Margin="0,20,0,0"/>
              </StackPanel>
 
         <!--FREQUENCY GRAPH-->
-        <local:FrequencyView DataContext="{Binding FFTViewModel}" 
-                             Grid.Row="1" Grid.Column="1"/>
+        <!--<local:FrequencyView DataContext="{Binding FFTViewModel}" 
+                             Grid.Row="1" Grid.Column="1"/>-->
     </Grid>
 </Window>
